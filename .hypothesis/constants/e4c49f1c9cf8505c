@@ -1,0 +1,4 @@
+# file: /Users/mekhail/Documents/University/Cos760/Project/Repository/src/models.py
+# hypothesis_version: 6.151.10
+
+[0.001, 0.5, 128, 256, 10000, 'cpu']

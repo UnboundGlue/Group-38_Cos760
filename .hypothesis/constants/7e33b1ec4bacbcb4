@@ -1,0 +1,4 @@
+# file: /Users/mekhail/Documents/University/Cos760/Project/Repository/src/preprocessing.py
+# hypothesis_version: 6.151.10
+
+['@\\w+', '[^\\w\\s]', '\\s+']

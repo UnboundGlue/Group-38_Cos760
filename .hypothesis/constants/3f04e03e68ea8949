@@ -1,0 +1,4 @@
+# file: /Users/mekhail/Documents/University/Cos760/Project/Repository/src/tokeniser.py
+# hypothesis_version: 6.151.10
+
+[256, 10000, '[CLS]', '[PAD]', '[SEP]', '[UNK]', 'bpe', 'wordpiece']

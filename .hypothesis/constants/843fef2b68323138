@@ -1,0 +1,4 @@
+# file: /Users/mekhail/Documents/University/Cos760/Project/Repository/src/dataset.py
+# hypothesis_version: 6.151.10
+
+[0.15, 0.7, 1.0, '.json', 'author', 'text', 'utf-8']
