@@ -1,0 +1,443 @@
+--- Page 1 ---
+ 
+Project  Proposal  Template  and  Evaluation  Rubric   Project  Proposal  Template  
+Project  Proposal  (Max  3  pages,  Arial  size  11).  Submit  a  PDF  file.  
+The  proposal  contributes  10%  to  the  entire  Project  component  of  your  assessment.  
+Note:  You  will  be  penalized  5  marks  for  exceeding  the  page  limit,  the  page  limit  includes  the  
+references.
+ 
+  
+Title  of  Project  
+(The
+ 
+broad
+ 
+title
+ 
+you
+ 
+were
+ 
+given)
+ 
+Subtitle  (A  title  reflecting  your  chosen  focus)  
+  
+First  Author,  Second  Author,  Third  Author  
+Group  Number
+ 
+  
+1.  Introduction  
+Example  Text.    
+2.  Background  and  Related  Work   Example  Text  
+3.  Proposed  Methodology  
+Example  Text.  Your  research  questions,  data  and  methods  should  be  here.  Also  your  
+workplan.
+ 
+4.  Evaluation  
+Should  contain  your  evaluation  strategy  
+5.  Expected  Output  
+Should  also  contain  a  brief  concluding  statement  
+6.  References  
+--- Page 2 ---
+ 
+Project  Proposal  Evaluation  Rubric  (20  Points  Total)
+ 
+Your  proposal  should  answer  the  following  questions:  
+●  Introduction:  What  is  the  broad  context  of  your  project?  Why  does  it  matter?  ●  Background/Literature  Review:  What  prior  work  exists?  How  does  your  proposal  
+relate
+ 
+to
+ 
+or
+ 
+differ
+ 
+from
+ 
+it?
+ ●  Research  Questions:  What  problem  are  you  solving?  Why  is  it  interesting?  ●  Data:  What  dataset  will  you  use?  How  large  is  it?  What  attributes  does  it  contain?  ●  Approach:  What  methods,  algorithms,  or  techniques  will  you  use?  ●  Evaluation:  How  will  you  measure  success?  What  baselines  exist?  ●  Expected  Outputs:  What  do  you  expect  the  final  results  to  be?  ●  References:  What  sources  informed  your  proposal?  
+ 
+1.  Introduction  (2  Points)  2  Points:  Clearly  sets  the  broad  context  of  the  project.  Motivates  the  work  by  
+explaining
+ 
+why
+ 
+the
+ 
+topic
+ 
+is
+ 
+relevant
+ 
+and
+ 
+important.
+ 
+Provides
+ 
+a
+ 
+concise
+ 
+overview
+ 
+of
+ 
+what
+ 
+the
+ 
+proposal
+ 
+addresses.
+ 1  Point:  Misses  important  portions,  e.g.  an  overview  of  the  proposal.  0  Points:  Introduction  is  missing,  too  vague  to  provide  context,  or  does  not  motivate  
+the
+ 
+work.
+  2.  Background  and  Literature  Review  (2  Points)  2  Points:  Demonstrates  awareness  of  relevant  prior  work  (2020  -  present  prioritized).  
+Discusses
+ 
+at
+ 
+least
+ 
+two
+ 
+related
+ 
+studies
+ 
+or
+ 
+approaches,
+ 
+identifies
+ 
+gaps
+ 
+or
+ 
+limitations
+ 
+in
+ 
+existing
+ 
+work,
+ 
+and
+ 
+clearly
+ 
+positions
+ 
+the
+ 
+proposed
+ 
+project
+ 
+within
+ 
+the
+ 
+literature.
+ 1  Point:  Mentions  related  work  but  lacks  depth,  critical  analysis,  or  clear  connection  
+to
+ 
+the
+ 
+proposed
+ 
+project.
+ 
+May
+ 
+list
+ 
+references
+ 
+without
+ 
+discussing
+ 
+their
+ 
+relevance.
+ 0  Points:  No  background  or  literature  review  provided,  or  existing  work  is  
+misrepresented.
+  3.  Research  Questions  (2  Points)  2  Points:  Clearly  defines  the  problem  to  be  solved  with  a  compelling  rationale  for  its  
+relevance
+ 
+and
+ 
+interest.
+ 
+Identifies
+ 
+gaps
+ 
+in
+ 
+existing
+ 
+solutions
+ 
+or
+ 
+highlights
+ 
+the
+ 
+novelty
+ 
+of
+ 
+the
+ 
+approach.
+ 1  Point:  Problem  is  defined  but  lacks  clear  justification  or  significance.  Some  gaps  or  
+relevance
+ 
+may
+ 
+be
+ 
+implied
+ 
+but
+ 
+not
+ 
+well
+ 
+articulated.
+ 0  Points:  Research  question  is  vague,  irrelevant,  or  missing.   4.  Dataset  and  Data  Description  (2  Points)  2  Points:  Provides  a  clear  description  of  the  dataset(s)  to  be  used,  including  size,  
+attributes,
+ 
+and
+ 
+source.
+ 
+Confirms
+ 
+availability
+ 
+or
+ 
+plans
+ 
+for
+ 
+collection.
+ 1  Point:  Mentions  a  dataset  but  lacks  important  details  such  as  size  or  attributes,  or  
+does
+ 
+not
+ 
+confirm
+ 
+availability.
+ 0  Points:  No  dataset  specified,  or  dataset  details  are  unclear  or  unrealistic.   
+--- Page 3 ---
+ 
+5.  Approach  and  Methodology  (2  Points)  2  Points:  Proposes  well-defined  methods,  algorithms,  or  techniques  appropriate  to  
+the
+ 
+problem.
+ 
+Justifies
+ 
+why
+ 
+these
+ 
+approaches
+ 
+are
+ 
+suitable
+ 
+and
+ 
+outlines
+ 
+expected
+ 
+behaviour.
+ 1  Point:  Proposes  methods  but  lacks  sufficient  justification  or  details  about  expected  
+outcomes.
+ 0  Points:  No  clear  methodology  described,  or  proposed  techniques  are  inappropriate  
+for
+ 
+the
+ 
+task.
+  6.  Evaluation  Strategy  (2  Points)  2  Points:  Defines  clear  and  appropriate  evaluation  metrics  (e.g.  BLEU,  ROGUE,  F1)  
+and
+ 
+baselines.
+ 
+Explains
+ 
+how
+ 
+success
+ 
+will
+ 
+be
+ 
+measured
+ 
+and
+ 
+identifies
+ 
+relevant
+ 
+benchmarks.
+ 1  Point:  Mentions  evaluation  metrics  but  lacks  clarity  or  justification.  Baselines  are  
+implied
+ 
+but
+ 
+not
+ 
+explicitly
+ 
+defined.
+ 0  Points:  No  evaluation  strategy  provided,  or  evaluation  methods  are  irrelevant  or  
+unrealistic.
+  7.  Expected  Outputs  and  Contributions  (2  Points)  2  Points:  Provides  a  clear  and  realistic  expectation  of  final  results,  including  insights,  
+potential
+ 
+challenges,
+ 
+and
+ 
+contributions
+ 
+to
+ 
+the
+ 
+field.
+ 1  Point:  Mentions  expected  outcomes  but  lacks  specificity  or  depth  in  describing  
+contributions.
+ 0  Points:  No  mention  of  expected  outputs,  or  expectations  are  overly  vague  and  
+unrealistic.
+  8.  References  (2  Points)   Use  an  author,year  style;  not  a  numbered  citation  style.  The  ACL  citation  style  is  
+preferred.
+ 2  Points:  Includes  a  properly  formatted  reference  list  with  at  least  four  relevant,  
+credible
+ 
+sources
+ 
+(e.g.
+ 
+journal
+ 
+articles,
+ 
+conference
+ 
+papers,
+ 
+or
+ 
+recognised
+ 
+textbooks).
+ 
+All
+ 
+sources
+ 
+cited
+ 
+in
+ 
+the
+ 
+body
+ 
+of
+ 
+the
+ 
+proposal
+ 
+appear
+ 
+in
+ 
+the
+ 
+reference
+ 
+list.
+ 1  Point:  References  are  included  but  are  insufficient  in  number,  lack  credibility,  are  
+poorly
+ 
+formatted,
+ 
+or
+ 
+do
+ 
+not
+ 
+all
+ 
+correspond
+ 
+to
+ 
+in-text
+ 
+citations.
+ 0  Points:  No  references  provided,  or  sources  are  entirely  inappropriate  (e.g.  only  
+informal
+ 
+web
+ 
+pages
+ 
+with
+ 
+no
+ 
+academic
+ 
+sources).
+  9.  Writing  Quality,  Clarity  and  Presentation  (2  points)  2  Points:  Proposal  is  well-structured,  logically  coherent,  and  written  in  clear  
+academic
+ 
+English;
+ 
+figures/tables
+ 
+are
+ 
+properly
+ 
+labelled.
+ 1.5  Points:  Generally  well-written  with  minor  grammatical  issues  or  formatting  
+inconsistencies.
+ 1  Point:   Writing  is  unclear  in  places;  structure  is  disjointed;  notable  formatting  errors.  0  Points:  Proposal  is  incoherent,  severely  underwritten,  or  does  not  meet  
+submission
+ 
+standards.
+ 
+10.   Feasibility,  Timeline  &  Work  Plan:  (2  points)  
+--- Page 4 ---
+ 
+2  points:  Timeline  exists  but  is  general;  team  roles  or  risk  assessment  partially  
+addressed.
+ 1  points:  A  vague  timeline  is  present;  feasibility  concerns  are  evident  but  
+unaddressed.
+ 0  points:  No  timeline  or  work  plan;  project  is  evidently  not  feasible  within  the  
+timeframe.
+ 

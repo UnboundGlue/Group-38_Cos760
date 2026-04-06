@@ -1,0 +1,48 @@
+\begin{thebibliography}{6}
+\providecommand{\natexlab}[1]{#1}
+
+\bibitem[{Dr{\v{z}}\'ik and Kapusta(2026)}]{drzik2026morphology}
+D.~Dr{\v{z}}\'ik and J.~Kapusta. 2026.
+\newblock \href {https://doi.org/10.1016/j.eswa.2026.131492} {The importance of
+  morphology-aware subword tokenization for {NLP} tasks in {S}lovak language
+  modeling}.
+\newblock \emph{Expert Systems With Applications}, 312:131492.
+
+\bibitem[{Gebremeskel et~al.(2026)Gebremeskel, Feng, Abera, and
+  Binegde}]{gebremeskel2026tigclaf}
+H.~G. Gebremeskel, C.~Feng, A.~M. Abera, and G.~N. Binegde. 2026.
+\newblock \href {https://doi.org/10.1038/s41598-026-42786-4} {{TigCLaF}: A
+  cross-lingual large language model framework for sentiment-aware text
+  classification in low-resource {T}igrigna}.
+\newblock \emph{Scientific Reports}.
+
+\bibitem[{Modupe et~al.(2022)Modupe, Celik, Marivate, and
+  Olugbara}]{modupe2022post}
+Abiodun Modupe, Turgay Celik, Vukosi Marivate, and Oludayo~O. Olugbara. 2022.
+\newblock \href {https://doi.org/10.3390/app12157518} {Post-authorship
+  attribution using regularized deep neural network}.
+\newblock \emph{Applied Sciences}, 12(15):7518.
+
+\bibitem[{Sennrich et~al.(2016)Sennrich, Haddow, and
+  Birch}]{sennrich2016neural}
+Rico Sennrich, Barry Haddow, and Alexandra Birch. 2016.
+\newblock Neural machine translation of rare words with subword units.
+\newblock In \emph{Proceedings of the 54th Annual Meeting of the Association
+  for Computational Linguistics (Volume 1: Long Papers)}, pages 1715--1725,
+  Berlin, Germany. Association for Computational Linguistics.
+
+\bibitem[{Suman et~al.(2021)Suman, Raj, Saha, and
+  Bhattacharyya}]{suman2021authorship}
+Chanchal Suman, Ayush Raj, Sriparna Saha, and Pushpak Bhattacharyya. 2021.
+\newblock Authorship attribution of microtext using capsule networks.
+\newblock \emph{{IEEE} Transactions on Computational Social Systems},
+  9(4):1038--1047.
+
+\bibitem[{Theophilo et~al.(2021)Theophilo, Giot, and
+  Rocha}]{theophilo2021authorship}
+Antonio Theophilo, Romain Giot, and Anderson Rocha. 2021.
+\newblock Authorship attribution of social media messages.
+\newblock \emph{{IEEE} Transactions on Computational Social Systems},
+  10(1):10--23.
+
+\end{thebibliography}

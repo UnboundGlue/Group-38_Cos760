@@ -1,0 +1,74 @@
+\pdfoutput=1
+% Page budget: tighten if markers enforce hard cap (references included).
+\documentclass[11pt]{article}
+
+\usepackage[final]{acl}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[scaled=0.95]{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage[protrusion=true,expansion=false]{microtype}
+\usepackage{amsmath}
+
+\title{Neural language models with subword embedding techniques\\{\normalsize\bfseries Authorship classification from subword token sequences}}
+\author{Mekhail Muller, Ruan Nel (25748956), Mosa Phalane \\ Group 38}
+
+\begin{document}
+\maketitle
+\vspace{-0.65\baselineskip}
+
+\section{Introduction}
+\label{sec:intro}
+Authorship attribution depends critically on \textbf{text representation}. Classical methods (bag-of-words ({BoW}), term-frequency inverse document frequency ({TF--IDF}), character- and word-level {n}-grams) capture lexical and local sequential cues but may miss writer-specific cues carried by sub-word regularities (e.g.\ morphology and spelling habits) \cite{suman2021authorship,theophilo2021authorship,modupe2022post}.
+
+\textbf{Subword tokenisation} ({BPE}, {WordPiece}) is now standard in neural {NLP} because it handles rare and variant forms compositionally \cite{sennrich2016neural}; yet it remains unclear, for author discrimination, whether subword inputs outperform strong classical baselines under fair, head-to-head evaluation.
+
+We propose to compare a neural classifier trained on subword sequences to the four traditional feature families above using standard multiclass metrics, and to conduct \textbf{post-hoc explanatory analysis ({SHAP} or {LIME}) and error analysis}, as required by the \textbf{project specification}. The corpus and protocol follow that specification; positioning relative to recent neural attribution work appears in Section~\ref{sec:related} and the bibliography.
+
+\noindent\textbf{Research questions.} \textbf{(RQ1)} Can we learn from the training corpus a \textbf{subword-based representation} (trainable embeddings on {BPE}/{WordPiece} sequences) that supports \textbf{stable multiclass authorship prediction} and is documented for reuse in this setting? \textbf{(RQ2)} How do \textbf{subword-token inputs} compare to \textbf{{BoW}}, \textbf{{TF--IDF}}, \textbf{character {n}-grams}, and \textbf{word {n}-grams} when every pathway follows the same \textbf{train/validation/test} and tuning rules? \textbf{(RQ3)} Does a \textbf{{CNN}--{LSTM}} on subword embeddings \textbf{outperform} the \textbf{validation-best} sparse pipeline on \textbf{held-out} metrics, and which \textbf{subword cues} and \textbf{author pairs} emerge in \textbf{{SHAP}} or \textbf{{LIME}} analyses of \textbf{errors}?
+
+\section{Background and Related Work}
+\label{sec:related}
+Neural attributors on \textbf{microtext} (e.g.\ capsule architectures) improve over classical features but typically stress \textbf{architecture} and headline scores rather than a \textbf{full grid} of strong sparse baselines under one transparent split and a fixed subword pipeline \cite{suman2021authorship}. Deep post-level attribution shows gains with heavy models, often without the same \textbf{eight-way} sparse comparison and \textbf{subword-{ID}} interface we target \cite{modupe2022post}. \textbf{Social-message} attribution highlights stylometric structure but usually builds on \textbf{word- or character-level} features rather than \textbf{{BPE}/{WordPiece}} sequences fed to a compact {CNN}--{LSTM} \cite{theophilo2021authorship}. \textbf{Gap.} We compare \textbf{subword tokens + {CNN}--{LSTM}} to the \textbf{best fairly tuned} sparse pipeline among four extractors $\times$ two linear classifiers, and we connect errors to \textbf{subword-level} attributions---consistent with subword practice \cite{sennrich2016neural} but evaluated for \textbf{author {ID} prediction}, not generative language modelling.
+
+\section{Proposed Methodology}
+\label{sec:method}
+\noindent\textbf{Dataset.} We use the \textbf{multi-class authorship benchmark} in the project template: \textbf{short, labelled social-style posts} ({CSV}/{JSON}), with \textbf{author labels} mapped to stable ids. After ingest we report \textbf{author count}, \textbf{posts per author}, and length statistics; we expect on the order of \textbf{tens to hundreds of authors} and \textbf{thousands to tens of thousands} of posts unless the release is smaller. We apply stratified \textbf{70/{15}/{15}} splits and a \textbf{minimum-posts-per-author} threshold (e.g.\ ten) before training.
+
+We compare a \textbf{subword {CNN}--{LSTM}} author classifier to \textbf{sparse-feature baselines} under a \textbf{fixed protocol}: shared preprocessing, hyperparameters tuned on validation, \textbf{macro-{F1} for model selection}, and on \textbf{test} \textbf{accuracy}, \textbf{macro} precision/recall/\textbf{{F1}}, \textbf{per-class {F1}}, and a \textbf{confusion matrix}---matching our evaluator contract (no micro-averaged or per-class precision/recall required unless we extend the spec).
+
+\noindent\textbf{Text and subwords.} Posts are cleaned consistently (e.g.\ strip {URLs} and @-mentions, normalise whitespace, \textbf{preserve default casing} for stylometric signal unless we explicitly run a lowercasing ablation; keep punctuation where it carries stylometric signal; drop empties). We train \textbf{{BPE}} (primary) and optionally \textbf{{WordPiece}} \textbf{on the training split only}, with bounded vocabulary and sequence length, then \textbf{encode} all splits with that frozen tokenizer---\textbf{saving the vocabulary} so every run maps text to the same reproducible {ID} sequences.
+
+\noindent\textbf{Neural model.} Embeddings feed \textbf{parallel one-dimensional convolutions} (several widths, \textbf{max-over-time pooling}), then a \textbf{stacked {LSTM}}, \textbf{dropout}, and a \textbf{linear head} over authors. We train with \textbf{Adam}, \textbf{gradient clipping}, and \textbf{cross-entropy}, and select weights by \textbf{validation macro-{F1}} with \textbf{early stopping} for final test scoring.
+
+\noindent\textbf{Encoder--decoder wording.} The course text sometimes describes \textbf{encoder--decoder} setups. Here the ``decoder'' is \textbf{not} text generation: the stack \textbf{encodes} each post into a vector used only by a \textbf{classification head} that \textbf{predicts author {ID}}. There is \textbf{no} open-ended decoding of language---only \textbf{multinomial classification}---so the implementation matches \textbf{the project brief's} writer-identification goal, not sequence-to-sequence generation.
+
+\noindent\textbf{Baselines.} The same protocol applies to classical pipelines: \textbf{bag-of-words}, \textbf{{TF--IDF}}, \textbf{character {n}-grams}, and \textbf{word {n}-grams}, each fitted \textbf{on train}, with \textbf{logistic regression} and \textbf{linear {SVM}} (\textbf{four extractors} $\times$ \textbf{two classifiers}); tune on \textbf{validation}, evaluate on \textbf{test}.
+
+\noindent\textbf{Explanatory evaluation.} We use \textbf{{SHAP}} or \textbf{{LIME}} with explanations at \textbf{subword-token} granularity (decoded when helpful); \textbf{the choice depends on library support and how cleanly each method wraps our classifier}. We \textbf{aggregate} over errors: confusion structure, \textbf{hardest author pairs}, and \textbf{recurring subword cues} linking mistakes to interpretable behaviour.
+
+\noindent\textbf{Robustness.} \textbf{If} the corpus exposes usable \textbf{metadata} (topic, channel, regime, etc.), we add \textbf{subset or held-out-stratum checks} where the data support it; \textbf{otherwise} we state \textbf{single-corpus scope} and rely on \textbf{per-author {F1}}, full \textbf{confusion matrices}, and \textbf{pairwise confusion} to show \textbf{who is hardest to separate}.
+
+\noindent\textbf{Feasibility.} \textbf{Timeline:} weeks 1--2---data loader, preprocessing, subword train/{encode}; weeks 3--4---{CNN}--{LSTM} and eight baselines with validation early stopping; weeks 5--6---locked test evaluation, {SHAP}/{LIME}, light ablations, report and slides. \textbf{Roles:} one member leads data/preprocessing, another the neural model and tokenizer, the third baselines, metrics, and explanations, with weekly integration. \textbf{Risks:} class imbalance, noisy text, and compute; mitigated by minimum samples per author, modest hyperparameter search, {CPU}-feasible baselines, and scoping optional robustness if time is tight.
+
+\section{Evaluation}
+\label{sec:eval}
+We follow Section~\ref{sec:method}: we tune every system on the \textbf{validation} split ({CNN}--{LSTM} with early stopping on macro-{F1}; sparse pipelines with their own validation tuning), \textbf{never} on test. One held-out \textbf{test} pass reports all final scores on the same split for the {CNN}--{LSTM} and every baseline.
+
+Metrics---\textbf{accuracy}, \textbf{macro} precision/recall/\textbf{{F1}}, \textbf{per-class {F1}}, \textbf{confusion matrix}---are computed with scikit-learn from each model's predictions. For the {CNN}--{LSTM} we use batched inference with gradients disabled (\texttt{torch.no\_grad()}).
+
+Among the \textbf{eight} sparse setups (\textbf{four} feature extractors $\times$ logistic regression and linear {SVM}), the main comparison pairs the {CNN}--{LSTM} with the validation-best macro-{F1} run on test; the other seven go in a table or appendix.
+
+Optionally, if time allows, we repeat the same metrics on \textbf{length} strata as a light robustness check (not core unless added to planning).
+
+\section{Expected output}
+\label{sec:expected}
+We expect the final run to produce a coherent \textbf{artefact bundle} that matches our methodology: a fitted \textbf{subword tokenizer} persisted to disk, a {CNN}--{LSTM} checkpoint selected by \textbf{validation macro-{F1}}, and \textbf{eight} validation-tuned sparse pipelines (\textbf{four} feature extractors, each with \textbf{logistic regression} and a \textbf{linear {SVM}}). Every system is scored once on the same \textbf{held-out test} split. For the main comparison we \textbf{foreground} {CNN}--{LSTM} against the sparse pipeline with the best validation macro-{F1}; the remaining seven results are reported in a compact table or appendix so the full grid stays visible without crowding the narrative.
+
+The written report will present the \textbf{standard classification metrics}, \textbf{confusion} structure and hard-to-separate author pairs, and \textbf{{SHAP}} or \textbf{{LIME}} analyses aligned to \textbf{subword} tokens for misclassified posts, with a small set of correct cases for contrast. \textbf{Robustness} is discussed in the same spirit as the methodology: we use \textbf{metadata-based} subsets when the data allow, and otherwise keep claims scoped to this corpus while leaning on \textbf{per-author} behaviour and the confusion matrix. \textbf{Length-based} subsets remain an optional supplement unless we promote them in planning. Alongside the report, we provide enough configuration, split definitions, saved artefacts, and rerun instructions to reproduce the experiment, and we prepare slides for the presentation---delivering an \textbf{integrated outcome} rather than a bare directory listing.
+
+In sum, these outputs address \textbf{(RQ1)}--\textbf{(RQ3)} and close the loop from \textbf{subword inputs} to \textbf{interpretable} author discrimination on the project benchmark.
+
+\bibliography{references}
+
+\end{document}
