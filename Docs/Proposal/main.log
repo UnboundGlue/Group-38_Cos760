@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.4.6)  9 APR 2026 19:36
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.4.6)  9 APR 2026 20:45
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -505,21 +505,6 @@ Underfull \hbox (badness 5817) in paragraph at lines 29--30
  []
 
 
-Underfull \hbox (badness 3690) in paragraph at lines 33--34
-\T1/phv/m/n/10.95 Authorship at-tri-bu-tion (AA) has tra-di-tion-ally
- []
-
-
-Underfull \hbox (badness 4981) in paragraph at lines 33--34
-\T1/phv/m/n/10.95 re-lied on sparse, frequency-based fea-ture
- []
-
-
-Underfull \hbox (badness 5189) in paragraph at lines 33--34
-\T1/phv/m/n/10.95 an au-thor's unique ``sty-lo-met-ric fin-ger-print''
- []
-
-
 Underfull \hbox (badness 1838) in paragraph at lines 35--36
 []\T1/phv/m/n/10.95 Contemporary work of-ten high-lights large
  []
@@ -533,11 +518,6 @@ t
 
 Underfull \hbox (badness 1389) in paragraph at lines 35--36
 \T1/phv/m/n/10.95 ([][]Hos-sain[][], [][]2025[][]), but such sys-tems can be
- []
-
-
-Underfull \hbox (badness 3138) in paragraph at lines 35--36
-\T1/phv/m/n/10.95 subword-oriented re-search ([][]Tora-man et al.[][],
  []
 
 
@@ -588,9 +568,8 @@ Underfull \hbox (badness 5756) in paragraph at lines 47--48
  []
 
 
-Underfull \hbox (badness 1259) in paragraph at lines 57--58
-\T1/phv/b/n/10.95 Feasibility. Time-line: \T1/phv/m/n/10.95 weeks 1--2---ingest
-,
+Underfull \hbox (badness 3679) in paragraph at lines 57--58
+\T1/phv/m/n/10.95 3--4 cover the CNN--LSTM and the eight
  []
 
 
@@ -661,7 +640,7 @@ Package rerunfilecheck Info: File `main.out' has not changed.
 Here is how much of TeX's memory you used:
  13668 strings out of 467871
  218392 string characters out of 5418377
- 687325 words of memory out of 5000000
+ 688325 words of memory out of 5000000
  42399 multiletter control sequences out of 15000+600000
  654966 words of font info for 73 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
@@ -672,9 +651,9 @@ ts/cm/cmsy10.pfb><C:/Users/mnrrn/AppData/Local/Programs/MiKTeX/fonts/type1/urw/
 helvetic/uhvb8a.pfb><C:/Users/mnrrn/AppData/Local/Programs/MiKTeX/fonts/type1/u
 rw/helvetic/uhvr8a.pfb><C:/Users/mnrrn/AppData/Local/Programs/MiKTeX/fonts/type
 1/urw/helvetic/uhvro8a.pfb>
-Output written on main.pdf (3 pages, 79543 bytes).
+Output written on main.pdf (3 pages, 79942 bytes).
 PDF statistics:
- 144 PDF objects out of 1000 (max. 8388607)
+ 146 PDF objects out of 1000 (max. 8388607)
  18 named destinations out of 1000 (max. 500000)
  6697 words of extra memory for PDF output out of 10000 (max. 10000000)
 
