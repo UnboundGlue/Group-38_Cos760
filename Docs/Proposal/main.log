@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.4.6)  9 APR 2026 20:45
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.4.6)  9 APR 2026 20:49
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -568,11 +568,6 @@ Underfull \hbox (badness 5756) in paragraph at lines 47--48
  []
 
 
-Underfull \hbox (badness 3679) in paragraph at lines 57--58
-\T1/phv/m/n/10.95 3--4 cover the CNN--LSTM and the eight
- []
-
-
 Underfull \hbox (badness 10000) in paragraph at lines 63--64
 []\T1/phv/m/n/10.95 We re-port \T1/phv/b/n/10.95 ac-cu-racy\T1/phv/m/n/10.95 , 
 \T1/phv/b/n/10.95 macro \T1/phv/m/n/10.95 pre-ci-
@@ -651,7 +646,7 @@ ts/cm/cmsy10.pfb><C:/Users/mnrrn/AppData/Local/Programs/MiKTeX/fonts/type1/urw/
 helvetic/uhvb8a.pfb><C:/Users/mnrrn/AppData/Local/Programs/MiKTeX/fonts/type1/u
 rw/helvetic/uhvr8a.pfb><C:/Users/mnrrn/AppData/Local/Programs/MiKTeX/fonts/type
 1/urw/helvetic/uhvro8a.pfb>
-Output written on main.pdf (3 pages, 79942 bytes).
+Output written on main.pdf (3 pages, 80069 bytes).
 PDF statistics:
  146 PDF objects out of 1000 (max. 8388607)
  18 named destinations out of 1000 (max. 500000)
