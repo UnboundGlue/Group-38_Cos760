@@ -54,7 +54,11 @@ We compare a \textbf{subword {CNN}--{LSTM}} author classifier to \textbf{sparse-
 
 \noindent\textbf{Robustness.} \textbf{If} the corpus exposes usable \textbf{metadata} (topic, channel, regime, etc.), we add \textbf{subset or held-out-stratum checks} where the data support it; \textbf{otherwise} we state \textbf{single-corpus scope} and rely on \textbf{per-author {F1}}, full \textbf{confusion matrices}, and \textbf{pairwise confusion} to show \textbf{who is hardest to separate}.
 
-\noindent\textbf{Feasibility.} \textbf{Timeline:} the stated \textbf{project work period} spans \textbf{April--May}, with final \textbf{deadlines in May}. We begin hands-on work in \textbf{May} only, so we budget at most \textbf{five} weeks. \textbf{Weeks 1--2:} ingest, cleaning, tokenizer train/encode. \textbf{Weeks 3--4:} the {CNN}--{LSTM} and the eight sparse baselines. \textbf{Week 5:} held-out test, {SHAP}/{LIME}, light ablations, report and slides. \textbf{Roles:} one member leads data and preprocessing, one the neural model and tokenizer, one sparse baselines plus shared metrics and explainability, with weekly merges. \textbf{Risks:} class imbalance, noisy text, and compute limits; we mitigate with a per-author minimum count, modest hyperparameter search, {CPU}-friendly baselines, and deferring optional analyses if needed.
+\noindent\textbf{Feasibility.} We follow an \textbf{agile} approach: week boundaries and task order are \textbf{not fixed}, and we rebalance scope when blockers, dependencies, or course deadlines demand it. What follows is our \textbf{proposed} baseline plan, not a rigid contract. The work fits comfortably into a \textbf{six-week} schedule. We spend the first two weeks on data ingestion, cleaning, and training the tokenizer. Weeks three and four cover building the {CNN}--{LSTM} alongside the eight sparse baselines; the final two weeks cover testing, {SHAP} and {LIME} analysis, light ablations, and writing the report and slides.
+
+\noindent The team splits naturally into three roles: one member owns data and preprocessing, another the neural model and tokenizer, and a third runs the sparse baselines while also owning shared metrics and explainability. We merge work weekly to stay in sync.
+
+\noindent The main risks are class imbalance, noisy text, and compute constraints. We mitigate with a minimum post count per author, a modest hyperparameter search, {CPU}-friendly baselines, and treating optional analyses as droppable if time runs short.
 
 \section{Evaluation}
 \label{sec:eval}
