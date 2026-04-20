@@ -6,14 +6,14 @@ Implement the full neural authorship attribution pipeline in Python: dataset loa
 
 ## Tasks
 
-- [ ] 1. Set up project structure, dependencies, and core data models
+- [ ] 1. Set up project structure, dependencies, and core data models(Ruan)
   - Create directory layout: `src/`, `tests/`, `experiments/`, `results/`, `artifacts/artifacts/checkpoints/`
   - Create `requirements.txt` with pinned versions for torch, tokenizers, scikit-learn, numpy, pandas, shap, lime, hypothesis, pytest
   - Implement `AuthorSample`, `Split`, `ModelConfig`, `TrainingConfig`, `MetricsDict`, `TrainingHistory`, `ErrorAnalysisReport` dataclasses in `src/models.py`
   - Define custom exceptions: `InsufficientSamplesError`, `TrainingDivergenceError`
   - _Requirements: 1.4, 5.6, 6.8, 8.3_
 
-- [ ] 2. Implement DatasetLoader
+- [ ] 2. Implement DatasetLoader  (RUan)
   - [ ] 2.1 Implement `DatasetLoader` in `src/dataset.py`
     - `load()`: read CSV/JSON, map author names to 0-indexed integer labels, return `(texts, labels)`
     - `split()`: stratified train/val/test split using `sklearn.model_selection.StratifiedShuffleSplit`; raise `InsufficientSamplesError` for authors below threshold
@@ -46,7 +46,7 @@ Implement the full neural authorship attribution pipeline in Python: dataset loa
     - Test URL removal, mention stripping, whitespace normalisation, empty string output
     - _Requirements: 2.1, 2.2, 2.3_
 
-- [ ] 4. Implement SubwordTokeniser
+- [ ] 4. Implement SubwordTokeniser(mac)
   - [ ] 4.1 Implement `SubwordTokeniser` in `src/tokeniser.py`
     - Wrap HuggingFace `tokenizers` library for BPE and WordPiece training
     - `train()`: train vocabulary on corpus; enforce `vocab_size` bound
@@ -79,7 +79,7 @@ Implement the full neural authorship attribution pipeline in Python: dataset loa
 - [ ] 5. Checkpoint — Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 6. Implement BaselineFeatureExtractor
+- [ ] 6. Implement BaselineFeatureExtractor (mosa)
   - [ ] 6.1 Implement `BaselineFeatureExtractor` in `src/features.py`
     - `fit_transform()`: wrap `CountVectorizer` (bow), `TfidfVectorizer` (tfidf), char n-gram and word n-gram variants; return sparse `[N, F]` matrix
     - `transform()`: apply fitted vocabulary to unseen texts without refitting
@@ -98,7 +98,7 @@ Implement the full neural authorship attribution pipeline in Python: dataset loa
     - Test all four methods, n-gram range config, transform on unseen texts
     - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
-- [ ] 7. Implement CNNLSTMModel
+- [ ] 7. Implement CNNLSTMModel(Ruan)
   - [ ] 7.1 Implement `CNNLSTMModel` in `src/model.py`
     - Embedding lookup `[B, T] → [B, T, D]` with dropout
     - Parallel `Conv1d` branches for each kernel size with ReLU + global max-over-time pooling → `[B, num_filters]` each
@@ -116,7 +116,7 @@ Implement the full neural authorship attribution pipeline in Python: dataset loa
     - Test output shape for various batch sizes and sequence lengths, no NaN in output
     - _Requirements: 5.1, 5.5_
 
-- [ ] 8. Implement Trainer
+- [ ] 8. Implement Trainer(all)
   - [ ] 8.1 Implement `Trainer` in `src/trainer.py`
     - Adam optimiser with gradient clipping `max_norm=1.0`
     - Per-epoch validation with macro-F1; save best checkpoint; reset patience counter on improvement
@@ -141,7 +141,7 @@ Implement the full neural authorship attribution pipeline in Python: dataset loa
 - [ ] 9. Checkpoint — Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 10. Implement Evaluator
+- [ ] 10. Implement Evaluator (mosa)
   - [ ] 10.1 Implement `evaluate()` in `src/evaluate.py`
     - Compute accuracy, macro-precision, macro-recall, macro-F1, per-class F1, confusion matrix using scikit-learn
     - Run inference in `torch.no_grad()` mode
@@ -160,7 +160,7 @@ Implement the full neural authorship attribution pipeline in Python: dataset loa
     - Test with known prediction/label pairs; verify hand-calculated metric values
     - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
-- [ ] 11. Implement ExplainabilityModule
+- [ ] 11. Implement ExplainabilityModule(mac)
   - [ ] 11.1 Implement `ExplainabilityModule` in `src/explainability.py`
     - `explain_shap()`: use `shap.DeepExplainer` or `shap.KernelExplainer` for token-level attributions; return list of `ShapExplanation` objects (one per input text)
     - `explain_lime()`: use `lime.lime_text.LimeTextExplainer` for local surrogate explanation
