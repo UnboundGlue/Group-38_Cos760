@@ -17,6 +17,24 @@ from .models import MetricsDict, TrainingHistory, TrainingDivergenceError
 logger = logging.getLogger(__name__)
 
 
+def _rebuild_train_loader_smaller_batch(train_loader: DataLoader, new_bs: int) -> DataLoader:
+    """Rebuild the training DataLoader with a smaller batch, preserving other settings (Req 6.7)."""
+    n_workers = getattr(train_loader, "num_workers", 0)
+    kwargs: dict = {
+        "dataset": train_loader.dataset,
+        "batch_size": new_bs,
+        "shuffle": True,
+        "num_workers": n_workers,
+        "pin_memory": getattr(train_loader, "pin_memory", False),
+        "drop_last": getattr(train_loader, "drop_last", False),
+        "collate_fn": train_loader.collate_fn,
+    }
+    if n_workers > 0:
+        kwargs["persistent_workers"] = getattr(train_loader, "persistent_workers", False)
+        kwargs["prefetch_factor"] = getattr(train_loader, "prefetch_factor", 2)
+    return DataLoader(**kwargs)
+
+
 class Trainer:
     """Manages the training loop, validation, early stopping, and checkpoint saving.
 
@@ -40,6 +58,13 @@ class Trainer:
         lr: float,
         patience: int,
         checkpoint_path: str = "artifacts/checkpoints/best_model.pt",
+        *,
+        weight_decay: float = 0.0,
+        label_smoothing: float = 0.0,
+        reduce_lr_on_plateau: bool = False,
+        class_weights: torch.Tensor | None = None,
+        lr_schedule: str | None = None,
+        cosine_t0: int = 8,
     ) -> TrainingHistory:
         """Run the training loop.
 
@@ -51,6 +76,16 @@ class Trainer:
             lr: Learning rate for Adam optimiser (Req 6.1).
             patience: Early-stopping patience in epochs (Req 6.4).
             checkpoint_path: Where to save the best model checkpoint (Req 6.3).
+            weight_decay: L2 regularisation for Adam (default 0 for backward compatibility).
+            label_smoothing: CrossEntropyLoss label smoothing (0 disables).
+            reduce_lr_on_plateau: If True, reduce learning rate when val macro-F1 plateaus
+                (used only when ``lr_schedule`` is None; legacy).
+            class_weights: Per-class loss weights (e.g. inverse frequency); must match num classes.
+            lr_schedule: ``"none"`` | ``"plateau"`` | ``"cosine_restarts"`` | None.
+                If None, ``plateau`` is used when ``reduce_lr_on_plateau`` is True, else ``none``.
+                **cosine_restarts** uses :class:`CosineAnnealingWarmRestarts` to raise LR
+                periodically and escape plateaus; steps once per epoch.
+            cosine_t0: Period in epochs for the first restart (cosine_restarts only).
 
         Returns:
             TrainingHistory with per-epoch train losses and validation metrics (Req 6.8).
@@ -67,8 +102,43 @@ class Trainer:
             device = torch.device("cpu")
 
         # Req 6.1 – Adam optimiser
-        optimiser = torch.optim.Adam(model.parameters(), lr=lr)
-        criterion = nn.CrossEntropyLoss()
+        optimiser = torch.optim.Adam(
+            model.parameters(), lr=lr, weight_decay=weight_decay
+        )
+        ce_kw: dict = {"label_smoothing": label_smoothing}
+        if class_weights is not None:
+            ce_kw["weight"] = class_weights.to(device)
+        criterion = nn.CrossEntropyLoss(**ce_kw)
+
+        if lr_schedule is not None:
+            mode = lr_schedule
+        else:
+            mode = "plateau" if reduce_lr_on_plateau else "none"
+        if mode not in ("none", "plateau", "cosine_restarts"):
+            raise ValueError(
+                f"lr_schedule must be 'none', 'plateau', or 'cosine_restarts'; got {mode!r}"
+            )
+
+        scheduler: (
+            torch.optim.lr_scheduler.ReduceLROnPlateau
+            | torch.optim.lr_scheduler.CosineAnnealingWarmRestarts
+            | None
+        ) = None
+        schedule_kind: str = "none"
+        if mode == "plateau":
+            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                optimiser,
+                mode="max",
+                factor=0.5,
+                patience=4,
+                min_lr=1e-6,
+            )
+            schedule_kind = "plateau"
+        elif mode == "cosine_restarts":
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
+                optimiser, T_0=cosine_t0, T_mult=1, eta_min=1e-6
+            )
+            schedule_kind = "cosine_restarts"
 
         best_val_f1 = -1.0
         patience_counter = 0
@@ -96,10 +166,17 @@ class Trainer:
             val_metrics = self.evaluate(model, val_loader)
             history.val_metrics.append(val_metrics)
 
+            lr_now = optimiser.param_groups[0]["lr"]
             logger.info(
-                "Epoch %d/%d  loss=%.4f  val_f1=%.4f",
-                epoch, epochs, epoch_loss, val_metrics.f1_macro,
+                "Epoch %d/%d  loss=%.4f  val_f1=%.4f  lr=%.2e  (%s)",
+                epoch, epochs, epoch_loss, val_metrics.f1_macro, lr_now, schedule_kind,
             )
+
+            if scheduler is not None:
+                if schedule_kind == "plateau":
+                    scheduler.step(val_metrics.f1_macro)
+                else:
+                    scheduler.step()
 
             # Req 6.3 – save checkpoint and reset patience on improvement
             if val_metrics.f1_macro > best_val_f1:
@@ -149,14 +226,7 @@ class Trainer:
                 "CUDA OOM at epoch %d. Halving batch size: %d → %d and retrying.",
                 epoch, old_bs, new_bs,
             )
-            # Rebuild loader with halved batch size
-            new_loader = DataLoader(
-                train_loader.dataset,
-                batch_size=new_bs,
-                shuffle=True,
-                num_workers=getattr(train_loader, "num_workers", 0),
-                collate_fn=train_loader.collate_fn,
-            )
+            new_loader = _rebuild_train_loader_smaller_batch(train_loader, new_bs)
             torch.cuda.empty_cache()
             return self._train_one_epoch(
                 model, new_loader, optimiser, criterion, device, epoch

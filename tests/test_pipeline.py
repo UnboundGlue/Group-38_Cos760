@@ -208,7 +208,11 @@ def test_checkpoint_roundtrip_identical_predictions() -> None:
 
         assert os.path.exists(ckpt_path), "Checkpoint file was not created"
 
-        # Collect predictions from the original trained model
+        # Trainer keeps last-epoch weights in memory but saves the *best val* checkpoint;
+        # align in-memory weights with the file before comparing to a fresh load.
+        model.load_state_dict(torch.load(ckpt_path, map_location="cpu"))
+
+        # Collect predictions from the model with checkpoint weights
         model.eval()
         original_preds: list[int] = []
         with torch.no_grad():

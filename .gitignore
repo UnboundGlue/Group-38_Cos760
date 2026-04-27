@@ -1,0 +1,9 @@
+# Local virtual environment (see README for setup)
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Hypothesis (property test examples DB / cache)
+.hypothesis/

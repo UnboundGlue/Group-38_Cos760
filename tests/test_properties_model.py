@@ -1,4 +1,4 @@
-"""Property-based tests for the CNN-LSTM model.
+"""Property-based tests for the CNN-LSTM model (Task 7.2).
 
 **Validates: Requirements 5.1, 5.5**
 """

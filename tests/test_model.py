@@ -1,4 +1,4 @@
-"""Unit tests for CNNLSTMModel.
+"""Unit tests for CNNLSTMModel (Task 7.3; synthetic token IDs only).
 
 Tests output shape, NaN-free outputs, ModelConfig acceptance, and
 different num_classes values.

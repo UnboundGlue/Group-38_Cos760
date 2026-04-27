@@ -6,13 +6,16 @@ Here's a complete step-by-step guide, organised into 3 workstreams your team can
 ## Step 0 — Setup (everyone does this)
 
 ```bash
-cd /Users/mekhail/Documents/University/Cos760/Project/Repository
+cd /path/to/Group-38_Cos760
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+python -m pip install --upgrade pip
+pip install -r requirements.in
 ```
 
-Requires Python 3.10+. Each team member sets this up on their own machine.
+On Windows (PowerShell): `.\.venv\Scripts\Activate.ps1` instead of `source .venv/bin/activate`.
+
+Requires Python 3.10+. See **README.md** for optional **`pip freeze > requirements-locked.txt`** and when to use it. Each team member sets this up on their own machine.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -36,7 +39,7 @@ Everyone uses the same dataset file.
 
 ## Step 2 — Run tests (verify everything works)
 
-From the Repository/ directory:
+From the repository root:
 
 ```bash
 python -m pytest tests/ -v

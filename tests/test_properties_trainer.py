@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import tempfile
+from pathlib import Path
 
 import torch
 from torch.utils.data import DataLoader, TensorDataset
@@ -13,7 +14,7 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from src.model import CNNLSTMModel
-from src.models import ModelConfig, TrainingConfig
+from src.models import ModelConfig
 from src.trainer import Trainer
 
 # Tiny model config kept constant across all examples for speed
@@ -60,7 +61,8 @@ def test_training_termination_bound(epochs: int, patience: int) -> None:
     val_loader = _make_loader()
     trainer = Trainer()
 
-    with tempfile.NamedTemporaryFile(suffix=".pt") as tmp:
+    with tempfile.TemporaryDirectory() as tdir:
+        checkpoint_path = str(Path(tdir) / "checkpoint.pt")
         history = trainer.train(
             model=model,
             train_loader=train_loader,
@@ -68,7 +70,7 @@ def test_training_termination_bound(epochs: int, patience: int) -> None:
             epochs=epochs,
             lr=1e-3,
             patience=patience,
-            checkpoint_path=tmp.name,
+            checkpoint_path=checkpoint_path,
         )
 
     # Req 6.5: training must terminate within the configured max epochs
@@ -112,7 +114,8 @@ def test_training_history_completeness(epochs: int, patience: int) -> None:
     val_loader = _make_loader()
     trainer = Trainer()
 
-    with tempfile.NamedTemporaryFile(suffix=".pt") as tmp:
+    with tempfile.TemporaryDirectory() as tdir:
+        checkpoint_path = str(Path(tdir) / "checkpoint.pt")
         history = trainer.train(
             model=model,
             train_loader=train_loader,
@@ -120,7 +123,7 @@ def test_training_history_completeness(epochs: int, patience: int) -> None:
             epochs=epochs,
             lr=1e-3,
             patience=patience,
-            checkpoint_path=tmp.name,
+            checkpoint_path=checkpoint_path,
         )
 
     completed_epochs = len(history.train_losses)

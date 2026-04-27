@@ -32,7 +32,7 @@ import numpy as np
 # directly from the Repository directory.
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from src.dataset import DatasetLoader
+from src.dataset import DEFAULT_CHANCHAL_200_CSV, DatasetLoader
 from src.features import BaselineFeatureExtractor
 from src.preprocessing import Preprocessor
 
@@ -88,7 +88,19 @@ def _build_parser() -> argparse.ArgumentParser:
         description="Train and evaluate baseline classifiers for authorship attribution.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    p.add_argument("--dataset", required=True, help="Path to dataset file (CSV or JSON).")
+    p.add_argument(
+        "--dataset",
+        default=DEFAULT_CHANCHAL_200_CSV,
+        help=(
+            "Path to dataset file (CSV or JSON). Default: Chanchal 200-tweets slice "
+            "(same default as run_cnn_lstm; see src/dataset.py)."
+        ),
+    )
+    p.add_argument(
+        "--fetch-dataset",
+        action="store_true",
+        help="If the file is missing, clone chanchalIITP/AuthorIdentification into data/ (needs git).",
+    )
     p.add_argument("--seed", type=int, default=42, help="Random seed.")
     p.add_argument(
         "--output",
@@ -115,7 +127,7 @@ def run(args: argparse.Namespace) -> dict:
     # ------------------------------------------------------------------
     logger.info("Loading dataset from %s …", args.dataset)
     loader = DatasetLoader()
-    texts, labels = loader.load(args.dataset)
+    texts, labels = loader.load(args.dataset, fetch_if_missing=args.fetch_dataset)
     logger.info("Loaded %d samples across %d authors.", len(texts), loader.num_authors)
 
     # ------------------------------------------------------------------

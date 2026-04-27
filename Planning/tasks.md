@@ -32,7 +32,7 @@ Implement the full neural authorship attribution pipeline in Python: dataset loa
     - Test CSV and JSON loading, label mapping, `InsufficientSamplesError` on small classes, split ratios
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
-- [ ] 3. Implement Preprocessor
+- [ ] 3. Implement Preprocessor(Ruan)
   - [ ] 3.1 Implement `Preprocessor` in `src/preprocessing.py`
     - `clean()`: remove URLs, @mentions, normalise whitespace; preserve punctuation by default
     - `batch_clean()`: apply `clean()` to every element, return list of equal length; empty strings pass through

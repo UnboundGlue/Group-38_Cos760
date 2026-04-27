@@ -1,0 +1,35 @@
+COS 760 Project Template:
+Neural language models with subword embedding techniques
+Project Title: (Students to define specific focus)
+Authors
+Dr Abiodun Modupe
+High-Level Topic:
+Neural language models with subword embedding techniques
+Introduction and motivation
+Neural language models with subword tokenisation have revolutionised natural language processing (NLP) by enhancing the understanding of texts at a granular level. Unlike traditional word-based tokenisation, such as Bag-of-Word (BoW) and term-frequency inverse document frequency (TF-IDF), subword tokenisation allows models to capture intricate relationships between smaller text units, such as morphemes and character sequences, making it especially effective for diverse linguistic styles and low-resource languages. Modern language models, such as BERT, GPT, and T5, leverage subword tokenisation to better grasp syntactic structures, semantic meanings, and contextual dependencies in texts. One key advantage of these models is that they generalise across different linguistic patterns, which allows for more accurate text generation, classification, and sentiment analysis. This capability is particularly important when analysing individual writing styles because subword embedding enables models to detect subtle variations in syntax, spelling, and morphological patterns. By understanding how these models process subword sequences, researchers can refine language models to enhance performance in stylistically diverse settings [1]. The aim of this topic, which is part of a research project for COS760, is to investigate how to leverage subword embedding to find a suitable writing style that can adequately characterise and classify individual writers. By looking at sub-word embedding strategies and how they affect model performance, we hope to make NLP models more flexible so that they can be used to correctly identify the author more often than a statistical or traditional method.
+Research Question
+How can subword embedding techniques be a suitable feature extraction? Could the approach influence the ability to understand and distinguish individuals' writing styles in a natural manner?
+How well can subword embeddings in a CNN-LSTM-based network improve performance when categorising tasks, such as stylistic analysis?
+Research Objective
+To learn and develop a general-purpose  vector representation, which can be used for authorship and classification tasks.
+To develop and analyse the role of subword embedding in neural language models compared to traditional extraction models, such as character n-grams and word n-grams, in conjunction with BOW and TF-IDF.
+To develop deep learning methods, such as CNN-LSTM with sub-word embedding-generated vectors, and measure the comparison with traditional feature extraction methods for authorship and classification tasks.
+Methodology
+Students should look into using CNN-LSTM as an encoder-decoder model to learn about and identify different writers based on the representations they've learnt from subword embedding and compare them with other well-known methods in a thorough experiment. We also expect students to conduct an explanatory evaluation. Conduct an error analysis using SHAP or LIME to understand misclassifications and contribute sub-word features to the identifiable writers.
+Dataset and resources
+1. This project will use the dataset from [2-3], which you can download below. Similarly, you are welcome to use the approach used in [2-3] to evaluate the proposed model as described in Section 1.
+https://shorturl.at/GJejw
+Evaluation Metrics
+Students must define a comprehensive evaluation strategy beyond standard classification metrics. Consider:
+Performance metrics: F1 score, precision, recall, and accuracy.
+Robustness Metrics: Performance across different dialects or domains.
+Explanatory Analysis: Model interpretation methods to identify patterns of failure and linguistic challenges.
+Expected Deliverables
+Proposal: A concise research proposal outlining the approach.
+Implementation & Experiments: A well-documented code repository.
+Report: A final report
+Presentation: A summary of findings.
+Reference
+Modupe, Abiodun, Turgay Celik, Vukosi Marivate, and Oludayo O. Olugbara. "Post-authorship attribution using regularized deep neural network." Applied Sciences 12, no. 15 (2022): 7518.
+Suman, Chanchal, Ayush Raj, Sriparna Saha, and Pushpak Bhattacharyya. "Authorship attribution of microtext using capsule networks." IEEE Transactions on Computational Social Systems 9, no. 4 (2021): 1038-1047.
+Theophilo, Antonio, Romain Giot, and Anderson Rocha. "Authorship attribution of social media messages." IEEE Transactions on Computational Social Systems 10, no. 1 (2021): 10-23.

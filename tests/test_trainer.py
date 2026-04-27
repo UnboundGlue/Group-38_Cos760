@@ -280,3 +280,49 @@ def test_checkpoint_is_loadable_state_dict() -> None:
         fresh_model = _make_model()
         state_dict = torch.load(ckpt_path, map_location="cpu")
         fresh_model.load_state_dict(state_dict)  # must not raise
+
+
+def test_trainer_cosine_restarts_runs() -> None:
+    """CosineAnnealingWarmRestarts does not break the training loop."""
+    model = _make_model()
+    train_loader = _make_loader()
+    val_loader = _make_loader()
+    trainer = Trainer()
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        ckpt_path = os.path.join(tmpdir, "c.pt")
+        history = trainer.train(
+            model=model,
+            train_loader=train_loader,
+            val_loader=val_loader,
+            epochs=3,
+            lr=1e-3,
+            patience=2,
+            checkpoint_path=ckpt_path,
+            lr_schedule="cosine_restarts",
+            cosine_t0=2,
+        )
+    assert len(history.train_losses) == 3
+
+
+def test_trainer_accepts_class_weights() -> None:
+    """CrossEntropyLoss with per-class weights runs without error."""
+    model = _make_model()
+    train_loader = _make_loader()
+    val_loader = _make_loader()
+    trainer = Trainer()
+    weights = torch.tensor([1.0, 2.0], dtype=torch.float32)
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        ckpt_path = os.path.join(tmpdir, "w.pt")
+        history = trainer.train(
+            model=model,
+            train_loader=train_loader,
+            val_loader=val_loader,
+            epochs=1,
+            lr=1e-3,
+            patience=2,
+            checkpoint_path=ckpt_path,
+            class_weights=weights,
+        )
+    assert len(history.train_losses) == 1
