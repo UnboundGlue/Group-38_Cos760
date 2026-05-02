@@ -184,3 +184,129 @@ def test_batch_encode_single_text(trained_tokeniser: SubwordTokeniser) -> None:
     result = trained_tokeniser.batch_encode(["hello world"], max_length=20)
 
     assert result.shape == (1, 20)
+
+
+# ---------------------------------------------------------------------------
+# train() validation
+# ---------------------------------------------------------------------------
+
+def test_train_empty_texts_raises_value_error() -> None:
+    """train() with empty texts list raises ValueError."""
+    tok = SubwordTokeniser()
+    with pytest.raises(ValueError, match="texts must be non-empty"):
+        tok.train([], vocab_size=512)
+
+
+def test_train_vocab_size_too_small_raises_value_error() -> None:
+    """train() with vocab_size <= 256 raises ValueError."""
+    tok = SubwordTokeniser()
+    with pytest.raises(ValueError, match="vocab_size must be > 256"):
+        tok.train(["hello world"], vocab_size=256)
+
+
+def test_train_invalid_algorithm_raises_value_error() -> None:
+    """train() with invalid algorithm raises ValueError."""
+    tok = SubwordTokeniser()
+    with pytest.raises(ValueError, match="algorithm must be"):
+        tok.train(["hello world"], vocab_size=512, algorithm="invalid")
+
+
+def test_train_wordpiece_algorithm() -> None:
+    """train() with algorithm='wordpiece' succeeds."""
+    tok = SubwordTokeniser()
+    tok.train(_CORPUS, vocab_size=512, algorithm="wordpiece")
+    ids = tok.encode("hello world", max_length=16)
+    assert len(ids) == 16
+
+
+# ---------------------------------------------------------------------------
+# decode()
+# ---------------------------------------------------------------------------
+
+def test_decode_before_train_raises_runtime_error() -> None:
+    """decode() on an untrained tokeniser must raise RuntimeError."""
+    tok = SubwordTokeniser()
+    with pytest.raises(RuntimeError):
+        tok.decode([1, 2, 3])
+
+
+def test_decode_reconstructs_text(trained_tokeniser: SubwordTokeniser) -> None:
+    """decode() reconstructs text from token IDs."""
+    text = "hello world tokenisation"
+    ids = trained_tokeniser.encode(text, max_length=32)
+    decoded = trained_tokeniser.decode(ids)
+    
+    # Decoded text should contain the original words (may have spacing differences)
+    assert "hello" in decoded.lower()
+    assert "world" in decoded.lower()
+
+
+def test_decode_filters_pad_tokens(trained_tokeniser: SubwordTokeniser) -> None:
+    """decode() skips PAD tokens (id=0)."""
+    text = "short"
+    ids = trained_tokeniser.encode(text, max_length=64)
+    
+    # ids should have many PAD tokens at the end
+    assert ids.count(0) > 0
+    
+    decoded = trained_tokeniser.decode(ids)
+    # Decoded text should not be affected by padding
+    assert len(decoded) > 0
+
+
+# ---------------------------------------------------------------------------
+# vocab_size()
+# ---------------------------------------------------------------------------
+
+def test_vocab_size_before_train_raises_runtime_error() -> None:
+    """vocab_size() on an untrained tokeniser must raise RuntimeError."""
+    tok = SubwordTokeniser()
+    with pytest.raises(RuntimeError):
+        tok.vocab_size()
+
+
+def test_vocab_size_returns_positive_integer(trained_tokeniser: SubwordTokeniser) -> None:
+    """vocab_size() returns a positive integer."""
+    size = trained_tokeniser.vocab_size()
+    assert isinstance(size, int)
+    assert size > 0
+
+
+def test_vocab_size_approximately_matches_requested(trained_tokeniser: SubwordTokeniser) -> None:
+    """vocab_size() is close to the requested size (512 in fixture)."""
+    size = trained_tokeniser.vocab_size()
+    # Should be close to 512, allowing variance (small corpus may produce smaller vocab)
+    assert 250 <= size <= 600
+
+
+# ---------------------------------------------------------------------------
+# save() edge cases
+# ---------------------------------------------------------------------------
+
+def test_save_before_train_raises_runtime_error() -> None:
+    """save() on an untrained tokeniser must raise RuntimeError."""
+    tok = SubwordTokeniser()
+    with tempfile.NamedTemporaryFile(suffix=".json") as tmp:
+        with pytest.raises(RuntimeError):
+            tok.save(tmp.name)
+
+
+def test_save_creates_parent_directories(trained_tokeniser: SubwordTokeniser) -> None:
+    """save() creates parent directories if they don't exist."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        nested_path = f"{tmpdir}/nested/dir/tokeniser.json"
+        trained_tokeniser.save(nested_path)
+        
+        import os
+        assert os.path.exists(nested_path)
+
+
+# ---------------------------------------------------------------------------
+# load() edge cases
+# ---------------------------------------------------------------------------
+
+def test_load_nonexistent_file_raises_exception() -> None:
+    """load() from a non-existent file raises an exception."""
+    tok = SubwordTokeniser()
+    with pytest.raises(Exception):  # Could be FileNotFoundError or other
+        tok.load("/nonexistent/path/tokeniser.json")
