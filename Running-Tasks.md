@@ -93,9 +93,9 @@ python -m experiments.run_cnn_lstm \
 ```
 
 Outputs:
-- results/metrics.json — all metrics (CNN-LSTM + baselines)
-- artifacts/tokeniser.json — trained BPE vocabulary
-- artifacts/checkpoints/best_model.pt — best model checkpoint (by validation macro-F1)
+- results/metrics.json — all metrics (CNN-LSTM + baselines); includes `cnn_lstm_run_dir` for the timestamped run folder
+- artifacts/tokeniser.json — trained BPE vocabulary from the latest invocation
+- `artifacts/runs/<label>_<UTC>/` — per-run folder: `model.pt` (best within that run), matching `tokeniser.json`, and `training.json` (see `README.md` for `--run-label`, `--save-run`, promotion)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

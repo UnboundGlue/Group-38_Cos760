@@ -305,6 +305,28 @@ def test_trainer_cosine_restarts_runs() -> None:
     assert len(history.train_losses) == 3
 
 
+def test_trainer_onecycle_runs() -> None:
+    """OneCycleLR stepped per-batch does not break the training loop."""
+    model = _make_model()
+    train_loader = _make_loader()
+    val_loader = _make_loader()
+    trainer = Trainer()
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        ckpt_path = os.path.join(tmpdir, "oc.pt")
+        history = trainer.train(
+            model=model,
+            train_loader=train_loader,
+            val_loader=val_loader,
+            epochs=2,
+            lr=3e-3,
+            patience=2,
+            checkpoint_path=ckpt_path,
+            lr_schedule="onecycle",
+        )
+    assert len(history.train_losses) == 2
+
+
 def test_trainer_accepts_class_weights() -> None:
     """CrossEntropyLoss with per-class weights runs without error."""
     model = _make_model()
@@ -326,3 +348,34 @@ def test_trainer_accepts_class_weights() -> None:
             class_weights=weights,
         )
     assert len(history.train_losses) == 1
+
+
+def test_on_epoch_end_hook_called_each_epoch() -> None:
+    """on_epoch_end receives (epoch, max_epochs, loss, val_f1, lr) once per completed epoch."""
+    model = _make_model()
+    train_loader = _make_loader()
+    val_loader = _make_loader()
+    trainer = Trainer()
+    calls: list[tuple[int, int, float, float, float]] = []
+
+    def hook(epoch: int, max_epochs: int, loss: float, f1: float, lr: float) -> None:
+        calls.append((epoch, max_epochs, loss, f1, lr))
+
+    max_epochs = 3
+    with tempfile.TemporaryDirectory() as tmpdir:
+        ckpt_path = os.path.join(tmpdir, "hook.pt")
+        history = trainer.train(
+            model=model,
+            train_loader=train_loader,
+            val_loader=val_loader,
+            epochs=max_epochs,
+            lr=1e-3,
+            patience=5,
+            checkpoint_path=ckpt_path,
+            on_epoch_end=hook,
+        )
+
+    assert len(calls) == len(history.train_losses)
+    assert calls[0][0] == 1 and calls[-1][0] == len(calls)
+    assert all(c[1] == max_epochs for c in calls)
+    assert all(c[4] > 0 for c in calls)

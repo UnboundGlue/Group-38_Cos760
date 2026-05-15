@@ -6,43 +6,43 @@ Implement the full neural authorship attribution pipeline in Python: dataset loa
 
 ## Tasks
 
-- [ ] 1. Set up project structure, dependencies, and core data models(Ruan)
-  - Create directory layout: `src/`, `tests/`, `experiments/`, `results/`, `artifacts/artifacts/checkpoints/`
+- [x] 1. Set up project structure, dependencies, and core data models(Ruan)
+  - Create directory layout: `src/`, `tests/`, `experiments/`, `results/`, `artifacts/` (`runs/`, `best_model_bundle/`)
   - Create `requirements.txt` with pinned versions for torch, tokenizers, scikit-learn, numpy, pandas, shap, lime, hypothesis, pytest
   - Implement `AuthorSample`, `Split`, `ModelConfig`, `TrainingConfig`, `MetricsDict`, `TrainingHistory`, `ErrorAnalysisReport` dataclasses in `src/models.py`
   - Define custom exceptions: `InsufficientSamplesError`, `TrainingDivergenceError`
   - _Requirements: 1.4, 5.6, 6.8, 8.3_
 
-- [ ] 2. Implement DatasetLoader  (RUan)
-  - [ ] 2.1 Implement `DatasetLoader` in `src/dataset.py`
+- [x] 2. Implement DatasetLoader  (RUan)
+  - [x] 2.1 Implement `DatasetLoader` in `src/dataset.py`
     - `load()`: read CSV/JSON, map author names to 0-indexed integer labels, return `(texts, labels)`
     - `split()`: stratified train/val/test split using `sklearn.model_selection.StratifiedShuffleSplit`; raise `InsufficientSamplesError` for authors below threshold
     - Expose `num_authors` and `samples_per_author` statistics
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
-  - [ ]* 2.2 Write property test for stratified split coverage (Property 3)
+  - [x]* 2.2 Write property test for stratified split coverage (Property 3)
     - **Property 3: Stratified Split Coverage**
     - **Validates: Requirements 1.3**
 
-  - [ ]* 2.3 Write property test for non-overlapping splits (Property 4)
+  - [x]* 2.3 Write property test for non-overlapping splits (Property 4)
     - **Property 4: Non-Overlapping Splits**
     - **Validates: Requirements 1.2**
 
-  - [ ]* 2.4 Write unit tests for DatasetLoader
+  - [x]* 2.4 Write unit tests for DatasetLoader
     - Test CSV and JSON loading, label mapping, `InsufficientSamplesError` on small classes, split ratios
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
-- [ ] 3. Implement Preprocessor(Ruan)
-  - [ ] 3.1 Implement `Preprocessor` in `src/preprocessing.py`
+- [x] 3. Implement Preprocessor(Ruan)
+  - [x] 3.1 Implement `Preprocessor` in `src/preprocessing.py`
     - `clean()`: remove URLs, @mentions, normalise whitespace; preserve punctuation by default
     - `batch_clean()`: apply `clean()` to every element, return list of equal length; empty strings pass through
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-  - [ ]* 3.2 Write property test for batch clean length preservation (Property 11)
+  - [x]* 3.2 Write property test for batch clean length preservation (Property 11)
     - **Property 11: Batch Clean Length Preservation**
     - **Validates: Requirements 2.2**
 
-  - [ ]* 3.3 Write unit tests for Preprocessor
+  - [x]* 3.3 Write unit tests for Preprocessor
     - Test URL removal, mention stripping, whitespace normalisation, empty string output
     - _Requirements: 2.1, 2.2, 2.3_
 
@@ -98,8 +98,8 @@ Implement the full neural authorship attribution pipeline in Python: dataset loa
     - Test all four methods, n-gram range config, transform on unseen texts
     - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
-- [ ] 7. Implement CNNLSTMModel(Ruan)
-  - [ ] 7.1 Implement `CNNLSTMModel` in `src/model.py`
+- [x] 7. Implement CNNLSTMModel(Ruan)
+  - [x] 7.1 Implement `CNNLSTMModel` in `src/model.py`
     - Embedding lookup `[B, T] → [B, T, D]` with dropout
     - Parallel `Conv1d` branches for each kernel size with ReLU + global max-over-time pooling → `[B, num_filters]` each
     - Concatenate multi-scale features, apply dropout, reshape for LSTM input
@@ -108,11 +108,11 @@ Implement the full neural authorship attribution pipeline in Python: dataset loa
     - Accept all hyperparameters via `ModelConfig`
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.6_
 
-  - [ ]* 7.2 Write property test for CNN-LSTM output shape invariant (Property 5)
+  - [x]* 7.2 Write property test for CNN-LSTM output shape invariant (Property 5)
     - **Property 5: CNN-LSTM Output Shape Invariant**
     - **Validates: Requirements 5.1, 5.5**
 
-  - [ ]* 7.3 Write unit tests for CNNLSTMModel
+  - [x]* 7.3 Write unit tests for CNNLSTMModel
     - Test output shape for various batch sizes and sequence lengths, no NaN in output
     - _Requirements: 5.1, 5.5_
 
@@ -179,23 +179,23 @@ Implement the full neural authorship attribution pipeline in Python: dataset loa
     - Test `error_analysis()` raises on zero misclassifications, top-k token extraction, confusion pair identification
     - _Requirements: 8.3, 8.4, 8.5, 8.6_
 
-- [ ] 12. Implement end-to-end pipeline and experiment scripts
-  - [ ] 12.1 Implement `experiments/run_cnn_lstm.py`
+- [x] 12. Implement end-to-end pipeline and experiment scripts
+  - [x] 12.1 Implement `experiments/run_cnn_lstm.py`
     - Wire DatasetLoader → Preprocessor → SubwordTokeniser → CNNLSTMModel → Trainer → Evaluator
     - Accept CLI args for dataset path, seed, model/training config overrides
-    - Save metrics to `results/metrics.json`, tokeniser to `artifacts/tokeniser.json`, checkpoints to `artifacts/checkpoints/`
+    - Save metrics to `results/metrics.json`, tokeniser to `artifacts/tokeniser.json`, CNN-LSTM bundle per run under `artifacts/runs/<label>_<UTC>/` (`model.pt`, `tokeniser.json`, `training.json`), optional canonical promotion to `artifacts/best_model_bundle/` on strict validation F1 improvement
     - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.6_
 
-  - [ ] 12.2 Implement `experiments/run_baselines.py`
+  - [x] 12.2 Implement `experiments/run_baselines.py`
     - Wire DatasetLoader → Preprocessor → BaselineFeatureExtractor → SVM/LogReg classifiers → Evaluator
     - Save baseline metrics to `results/metrics.json` alongside CNN-LSTM results
     - _Requirements: 9.2, 9.6_
 
-  - [ ]* 12.3 Write property test for pipeline reproducibility (Property 15)
+  - [x]* 12.3 Write property test for pipeline reproducibility (Property 15)
     - **Property 15: Pipeline Reproducibility**
     - **Validates: Requirements 9.1**
 
-  - [ ]* 12.4 Write integration tests in `tests/test_pipeline.py`
+  - [x]* 12.4 Write integration tests in `tests/test_pipeline.py`
     - Run full pipeline on synthetic dataset (50 samples, 5 authors); assert no errors and all metrics in `[0.0, 1.0]`
     - Test checkpoint save/load round-trip produces identical predictions
     - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6_

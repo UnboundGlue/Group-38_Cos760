@@ -106,6 +106,15 @@ def test_model_stores_config() -> None:
     assert model.config is config
 
 
+def test_encode_document_vector_shape() -> None:
+    """encode() returns [B, lstm_hidden] for reuse as a general representation."""
+    model = _make_model()
+    token_ids = _random_input(batch_size=3, seq_len=16)
+    with torch.no_grad():
+        z = model.encode(token_ids)
+    assert z.shape == (3, _SMALL_CONFIG["lstm_hidden"])
+
+
 # ---------------------------------------------------------------------------
 # Different num_classes values
 # ---------------------------------------------------------------------------

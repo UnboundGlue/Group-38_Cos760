@@ -4,21 +4,38 @@ from __future__ import annotations
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch import Tensor
 
+from . import training_hardware
 from .models import ModelConfig
 
 
 class CNNLSTMModel(nn.Module):
     """CNN-LSTM model for authorship attribution.
 
+    Subword embeddings are scanned by parallel Conv1d n-gram detectors. Each
+    branch yields a sequence of CNN features (**no** pooling before recurrence).
+    Multi-scale sequences are concatenated along the channel dimension, aligned to
+    the input length *T*, then passed through a **stacked LSTM along time**.
+    Finally, max-over-time pooling on LSTM outputs compresses each sequence into
+    a single document vector (for classification or downstream reuse).
+
+    This matches an honest CNN→LSTM stack for comparing learnt dense vectors
+    to sparse TF-IDF / n-gram baselines.
+
     Architecture:
-        1. Embedding lookup: [B, T] → [B, T, D] with dropout
-        2. Parallel Conv1d branches per kernel_size with ReLU + global max-over-time pooling
-        3. Concatenate multi-scale features → [B, num_filters * len(kernel_sizes)], apply dropout
-        4. Reshape for LSTM: [B, 1, num_filters * len(kernel_sizes)]
-        5. Stacked LSTM; take last-layer hidden state h_n[-1] → [B, lstm_hidden]
-        6. Dropout + Linear classification head → logits [B, num_classes]
+        1. Embedding: [B, T] → [B, T, D] with dropout.
+        2. Parallel Conv1d + ReLU per kernel *k*: [B, D, T] → [B, F, T-k+1];
+           pad each branch on the **right** to length *T*, concat → [B, F·K, T].
+        3. Permute → [B, T, F·K], dropout on CNN channels.
+        4. LSTM along time → [B, T, lstm_hidden].
+        5. Max-over-time on LSTM outputs → document vector [B, lstm_hidden].
+        6. Dropout + linear head → logits [B, num_classes].
+
+    Args:
+        token_ids must satisfy ``T >= max(kernel_sizes)`` so every conv map has
+        at least one position.
     """
 
     def __init__(self, config: ModelConfig) -> None:
@@ -26,7 +43,6 @@ class CNNLSTMModel(nn.Module):
 
         self.config = config
 
-        # Step 1: Embedding layer with dropout
         self.embedding = nn.Embedding(
             num_embeddings=config.vocab_size,
             embedding_dim=config.embed_dim,
@@ -34,7 +50,6 @@ class CNNLSTMModel(nn.Module):
         )
         self.embed_dropout = nn.Dropout(p=config.dropout)
 
-        # Step 2: Parallel CNN branches — one per kernel size
         self.conv_branches = nn.ModuleList([
             nn.Conv1d(
                 in_channels=config.embed_dim,
@@ -44,12 +59,9 @@ class CNNLSTMModel(nn.Module):
             for k in config.kernel_sizes
         ])
 
-        # Step 3: Dropout after CNN concatenation
         cnn_output_dim = config.num_filters * len(config.kernel_sizes)
         self.cnn_dropout = nn.Dropout(p=config.dropout)
 
-        # Steps 4–5: Stacked LSTM
-        # lstm_dropout only applied between layers (requires lstm_layers > 1)
         lstm_dropout = config.dropout if config.lstm_layers > 1 else 0.0
         self.lstm = nn.LSTM(
             input_size=cnn_output_dim,
@@ -59,48 +71,86 @@ class CNNLSTMModel(nn.Module):
             dropout=lstm_dropout,
         )
 
-        # Step 6: Dropout + classification head
         self.head_dropout = nn.Dropout(p=config.dropout)
         self.classifier = nn.Linear(config.lstm_hidden, config.num_classes)
 
-    def forward(self, token_ids: Tensor) -> Tensor:
-        """Forward pass.
+    def encode(self, token_ids: Tensor) -> Tensor:
+        """Return the document embedding [B, lstm_hidden] (before softmax head).
 
-        Args:
-            token_ids: Integer tensor of shape [B, T].
-
-        Returns:
-            logits: Float tensor of shape [B, num_classes].
+        Use this representation for retrieval, probing, or other classification
+        heads while keeping subword embeddings and CNN–LSTM feature learning
+        shared with :meth:`forward`.
         """
-        # Step 1: Embedding lookup + dropout → [B, T, D]
         x = self.embedding(token_ids)          # [B, T, D]
         x = self.embed_dropout(x)
+        x_t = x.permute(0, 2, 1)                # [B, D, T]
+        _b, _d, seq_len = x_t.shape
 
-        # Step 2: Parallel CNN branches
-        # Conv1d expects [B, C_in, L], so permute to [B, D, T]
-        x_t = x.permute(0, 2, 1)              # [B, D, T]
-
-        pooled_features: list[Tensor] = []
+        branch_feats: list[Tensor] = []
         for conv in self.conv_branches:
-            conv_out = conv(x_t)               # [B, num_filters, T-k+1]
-            activated = torch.relu(conv_out)   # [B, num_filters, T-k+1]
-            # Global max-over-time pooling
-            pooled, _ = activated.max(dim=2)   # [B, num_filters]
-            pooled_features.append(pooled)
+            activated = torch.relu(conv(x_t))  # [B, F, T-k+1]
+            l = activated.size(2)
+            if l < seq_len:
+                activated = F.pad(activated, (0, seq_len - l))
+            branch_feats.append(activated)
 
-        # Step 3: Concatenate + dropout → [B, num_filters * len(kernel_sizes)]
-        cnn_concat = torch.cat(pooled_features, dim=1)  # [B, num_filters * len(kernel_sizes)]
-        cnn_concat = self.cnn_dropout(cnn_concat)
+        cnn_stack = torch.cat(branch_feats, dim=1)  # [B, F*K, T]
+        cnn_stack = self.cnn_dropout(cnn_stack)
+        seq = cnn_stack.permute(0, 2, 1)            # [B, T, F*K]
 
-        # Step 4: Reshape for LSTM → [B, 1, num_filters * len(kernel_sizes)]
-        lstm_input = cnn_concat.unsqueeze(1)   # [B, 1, cnn_output_dim]
+        lstm_out, _ = self.lstm(seq)               # [B, T, lstm_hidden]
+        doc_vec, _ = lstm_out.max(dim=1)
+        return doc_vec
 
-        # Step 5: LSTM → take last-layer hidden state
-        _, (h_n, _) = self.lstm(lstm_input)    # h_n: [lstm_layers, B, lstm_hidden]
-        final_hidden = h_n[-1]                 # [B, lstm_hidden]
+    def forward(self, token_ids: Tensor) -> Tensor:
+        """Return classification logits [B, num_classes]."""
+        doc_vec = self.encode(token_ids)
+        doc_vec = self.head_dropout(doc_vec)
+        return self.classifier(doc_vec)
 
-        # Step 6: Dropout + linear head → logits [B, num_classes]
-        final_hidden = self.head_dropout(final_hidden)
-        logits = self.classifier(final_hidden) # [B, num_classes]
+    # --- Training/device defaults for this architecture (delegates to training_hardware) ---
 
-        return logits
+    @staticmethod
+    def preferred_training_device() -> torch.device:
+        return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    @staticmethod
+    def configure_cudnn_for_device(device: torch.device) -> None:
+        if device.type == "cuda":
+            torch.backends.cudnn.benchmark = True
+            torch.backends.cudnn.deterministic = False
+            torch.backends.cuda.matmul.allow_tf32 = True
+            torch.backends.cudnn.allow_tf32 = True
+
+    @staticmethod
+    def gpu_total_memory_gib(device_index: int = 0) -> float | None:
+        return training_hardware.gpu_total_memory_gib(device_index)
+
+    @staticmethod
+    def cuda_build_hint() -> str | None:
+        return training_hardware.cuda_build_hint()
+
+    @staticmethod
+    def suggest_batch_size(
+        *,
+        use_cuda: bool | None = None,
+        gpu_mem_gib: float | None = None,
+        device_index: int = 0,
+        respect_free_vram: bool = True,
+    ) -> int:
+        if use_cuda is None:
+            use_cuda = torch.cuda.is_available()
+        if use_cuda and gpu_mem_gib is None:
+            gpu_mem_gib = training_hardware.gpu_total_memory_gib(device_index)
+        elif not use_cuda:
+            gpu_mem_gib = None
+        return training_hardware.suggest_batch_size(
+            use_cuda=use_cuda,
+            gpu_mem_gib=gpu_mem_gib,
+            device_index=device_index,
+            respect_free_vram=respect_free_vram,
+        )
+
+    @staticmethod
+    def suggest_num_workers() -> int:
+        return training_hardware.suggest_num_workers()

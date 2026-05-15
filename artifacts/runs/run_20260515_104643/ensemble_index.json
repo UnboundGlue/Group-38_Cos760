@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "members": [
+    {
+      "train_seed": 42,
+      "relative_dir": "member_train42"
+    },
+    {
+      "train_seed": 43,
+      "relative_dir": "member_train43"
+    },
+    {
+      "train_seed": 44,
+      "relative_dir": "member_train44"
+    }
+  ]
+}

@@ -28,6 +28,15 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 Method = Literal["bow", "tfidf", "char", "word"]
 _VALID_METHODS: tuple[Method, ...] = ("bow", "tfidf", "char", "word")
 
+# Stable JSON/report keys ↔ :class:`BaselineFeatureExtractor` ``method``
+# ("char_ngram"/"word_ngram" are historical experiment names.)
+BASELINE_EXPERIMENT_METHODS: tuple[tuple[str, Method], ...] = (
+    ("bow", "bow"),
+    ("tfidf", "tfidf"),
+    ("char_ngram", "char"),
+    ("word_ngram", "word"),
+)
+
 
 class BaselineFeatureExtractor:
     """

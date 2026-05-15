@@ -19,10 +19,16 @@ from __future__ import annotations
 import csv
 import json
 from collections import Counter
+from pathlib import Path
 
 import pytest
 
-from src.dataset import DatasetLoader
+from src.dataset import (
+    DatasetLoader,
+    DEFAULT_CHANCHAL_200_CSV,
+    DEFAULT_CHANCHAL_CSV,
+    resolve_evaluation_dataset_path,
+)
 from src.models import InsufficientSamplesError, Split
 
 
@@ -354,3 +360,23 @@ class TestSplit:
             assert len(tr.texts) + len(va.texts) + len(te.texts) == n
             seen_test.update(te.texts)
         assert len(seen_test) == n
+
+
+def test_resolve_evaluation_dataset_path_explicit_wins_then_preset_then_bundle_then_default(tmp_path):
+    custom = tmp_path / "mine.csv"
+    custom.write_text("x")
+    explicit_res = resolve_evaluation_dataset_path(
+        explicit=str(custom), preset="chanchal_50", training_cli_dataset="ignored.csv"
+    )
+    assert Path(explicit_res) == Path(str(custom)).expanduser()
+    got50 = resolve_evaluation_dataset_path(explicit=None, preset="chanchal_50", training_cli_dataset="ignored.csv")
+    assert got50 == DEFAULT_CHANCHAL_CSV
+    got200p = resolve_evaluation_dataset_path(explicit=None, preset="chanchal_200", training_cli_dataset=None)
+    assert got200p == DEFAULT_CHANCHAL_200_CSV
+    from_bundle = tmp_path / "from_bundle.csv"
+    from_bundle.write_text("")
+    bundled = resolve_evaluation_dataset_path(explicit=None, preset=None, training_cli_dataset=str(from_bundle))
+    assert Path(bundled) == Path(str(from_bundle)).expanduser()
+    default_only = resolve_evaluation_dataset_path(explicit=None, preset=None, training_cli_dataset=None)
+    assert default_only == DEFAULT_CHANCHAL_200_CSV
+

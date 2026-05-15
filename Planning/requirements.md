@@ -152,7 +152,7 @@ This document specifies the requirements for a neural authorship attribution sys
 1. WHEN the full pipeline is executed with a fixed random seed, THE System SHALL produce identical metric results across runs on the same hardware.
 2. WHEN the pipeline completes, THE System SHALL save evaluation metrics to `results/metrics.json` for each experimental condition.
 3. WHEN the pipeline completes, THE System SHALL save the trained tokeniser vocabulary to `artifacts/tokeniser.json`.
-4. WHEN the pipeline completes, THE System SHALL save model checkpoints to `artifacts/checkpoints/`.
+4. WHEN the pipeline completes, THE System SHALL persist CNN-LSTM weights and reproducibility metadata under a **new timestamped directory** ``artifacts/runs/<label>_<UTC>/``, including the best checkpoint for **that run** (`model.pt`, updated within the run when validation macro-F1 improves), a copy-paired `tokeniser.json`, and `training.json`; THE pipeline SHALL BY DEFAULT refresh `artifacts/best_model_bundle/` **only when** this run's best validation macro-F1 **strictly exceeds** the value recorded in the incumbent bundle's `training.json` (overridable via CLI flags; see `README.md`).
 5. WHEN the pipeline is run on a synthetic dataset of at least 50 samples across 5 authors, THE System SHALL complete without error and produce metric values in `[0.0, 1.0]`.
 6. THE System SHALL produce both CNN-LSTM and baseline evaluation results in a single pipeline run for direct comparison.
 

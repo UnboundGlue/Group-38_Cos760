@@ -138,6 +138,16 @@ class SubwordTokeniser:
         self._require_trained()
         return self._tokenizer.get_vocab_size()  # type: ignore[union-attr]
 
+    def id_to_piece_map(self) -> dict[int, str]:
+        """Map each id ``0 .. vocab_size-1`` to its vocabulary piece string."""
+        self._require_trained()
+        n = self.vocab_size()
+        out: dict[int, str] = {}
+        for i in range(n):
+            t = self._tokenizer.id_to_token(i)  # type: ignore[union-attr]
+            out[i] = t if t is not None else ""
+        return out
+
     # ------------------------------------------------------------------
     # Persistence
     # ------------------------------------------------------------------

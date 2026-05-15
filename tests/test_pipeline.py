@@ -3,8 +3,11 @@
 Tests:
     1. Full pipeline on a synthetic dataset (50 samples, 5 authors) — all metrics in [0.0, 1.0].
     2. Checkpoint save/load round-trip produces identical predictions.
+    3. Metrics dict is JSON-serialisable (metrics file pattern).
+    4. Subword tokeniser save/load preserves encodings.
 
-Validates: Requirements 9.1, 9.2, 9.3, 9.4, 9.5, 9.6
+Validates pipeline requirements **9.1–9.5** directly here; **9.6** (CNN + sparse baselines
+together) is covered by ``src.sparse_baselines`` tests and ``run_cnn_lstm`` / ``run_baselines``.
 """
 
 from __future__ import annotations
@@ -16,7 +19,7 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
-from src.evaluate import evaluate
+from src.evaluate import evaluate, metrics_dict_to_jsonable
 from src.model import CNNLSTMModel
 from src.models import ModelConfig
 from src.preprocessing import Preprocessor
@@ -241,3 +244,58 @@ def test_checkpoint_roundtrip_identical_predictions() -> None:
         f"Original: {original_preds}\n"
         f"Loaded:   {loaded_preds}"
     )
+
+
+def test_evaluate_outputs_are_json_serializable() -> None:
+    """After training, test metrics can be written as JSON (Req 9.2)."""
+    import json
+
+    preprocessor = Preprocessor()
+    cleaned_texts = preprocessor.batch_clean(_ALL_TEXTS)
+    n_train = int(len(cleaned_texts) * 0.6)
+    train_texts = cleaned_texts[:n_train]
+
+    tokeniser = SubwordTokeniser()
+    tokeniser.train(train_texts, vocab_size=300, algorithm="bpe")
+    encoded = tokeniser.batch_encode(cleaned_texts, max_length=_SEQ_LEN)
+    train_loader, val_loader, test_loader = _build_loaders(encoded, _ALL_LABELS)
+
+    model = CNNLSTMModel(_MODEL_CONFIG)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        ckpt_path = os.path.join(tmpdir, "best_model.pt")
+        Trainer().train(
+            model=model,
+            train_loader=train_loader,
+            val_loader=val_loader,
+            epochs=1,
+            lr=1e-3,
+            patience=5,
+            checkpoint_path=ckpt_path,
+        )
+        metrics = evaluate(model, test_loader)
+
+    blob = metrics_dict_to_jsonable(metrics)
+    json.dumps(blob)
+
+
+def test_subword_tokeniser_save_load_preserves_encoding() -> None:
+    """Save/load reproduces identical encodings (Req 9.3 artefact contract)."""
+    preprocessor = Preprocessor()
+    cleaned_texts = preprocessor.batch_clean(_ALL_TEXTS)
+    n_train = int(len(cleaned_texts) * 0.6)
+    train_texts = cleaned_texts[:n_train]
+
+    tokeniser = SubwordTokeniser()
+    tokeniser.train(train_texts, vocab_size=300, algorithm="bpe")
+
+    fd, path = tempfile.mkstemp(suffix=".json")
+    os.close(fd)
+    try:
+        tokeniser.save(path)
+        loaded = SubwordTokeniser()
+        loaded.load(path)
+        a = tokeniser.batch_encode(cleaned_texts[:7], max_length=_SEQ_LEN)
+        b = loaded.batch_encode(cleaned_texts[:7], max_length=_SEQ_LEN)
+        np.testing.assert_array_equal(a, b)
+    finally:
+        os.unlink(path)

@@ -35,14 +35,16 @@ Baseline classifiers (SVM, Logistic Regression) are trained on the same data usi
 │   └── explainability.py   # ExplainabilityModule — SHAP, LIME, error analysis
 ├── experiments/
 │   ├── run_cnn_lstm.py              # End-to-end CNN-LSTM pipeline (CLI)
+│   ├── load_cnn_checkpoint.py       # Load a saved bundle; evaluate on default / custom CSV
 │   ├── run_baselines.py             # Baseline-only pipeline (CLI)
 │   ├── dry_run_cnn_lstm_synthetic.py   # Task 7 smoke: model + random token IDs only
 │   ├── dry_run_cnn_lstm_real_text_stub.py  # one forward: real data + char stub ids
 │   └── validate_cnn_lstm_real_stub.py  # few epochs: train/val metrics vs random (stub ids)
 ├── tests/                  # Unit tests and property-based tests (hypothesis)
 ├── artifacts/
-│   ├── tokeniser.json      # Saved tokeniser vocabulary (generated)
-│   └── checkpoints/        # Model checkpoints (generated)
+│   ├── tokeniser.json           # Saved tokeniser vocabulary from the latest training run (generated)
+│   ├── runs/                    # One timestamped folder per training run: model.pt + tokeniser.json + training.json (generated)
+│   └── best_model_bundle/       # Canonical best bundle — only replaced when a new run strictly improves val macro-F1 (generated)
 ├── results/
 │   └── metrics.json        # Evaluation results (generated)
 ├── requirements.in         # Direct dependencies (no version pins; edit this list)
@@ -152,13 +154,22 @@ All commands below assume your shell’s **current directory is the repository r
 
 **`--dataset` is optional:** it defaults to the Chanchal **`200_tweets_per_user.csv`** slice (`DEFAULT_CHANCHAL_200_CSV` in `src/dataset.py`) so each author has more training text. Pass `--dataset` only to use another CSV/JSON (e.g. the smaller `50_tweets_per_user.csv` for fast experiments). `--fetch-dataset` clones the AuthorIdentification repo if the file is missing.
 
-**GPU:** Training picks **batch size** and **DataLoader workers** from your hardware (`--batch-size 0`, `--num-workers -1` by default; see `src/training_hardware.py`). Install a **CUDA-enabled** PyTorch from the [Get Started](https://pytorch.org/get-started/locally/) page (not the default CPU-only `pip install torch`). **NVIDIA RTX 50-series (Blackwell, e.g. RTX 5070)** needs a build with **CUDA 12.8** in the wheel name (e.g. `+cu128`); older `+cu126` wheels do not include **sm_120** kernels. Example for this repo’s venv:
+**GPU:** Training picks **batch size** and **DataLoader workers** from your hardware (`--batch-size 0`, `--num-workers -1` by default; see `src/training_hardware.py`). For CUDA, **total VRAM** sets a baseline tier ( **`≥ ~11.5 GiB`** is treated like a 12 GB class so laptop parts that report 11.6–11.9 GiB are not stuck on the smaller 64 tier). **`torch.cuda.mem_get_info`** free/total fraction can **scale batch down** when little framebuffer is free, or **nudge batch up modestly** when most of VRAM looks idle ahead of allocation (trainer can still halve on CUDA OOM).
+
+Install a **CUDA-enabled** PyTorch from the [Get Started](https://pytorch.org/get-started/locally/) page (not the default CPU-only `pip install torch`). **NVIDIA RTX 50-series (Blackwell, e.g. RTX 5070)** needs a build with **CUDA 12.8** in the wheel name (e.g. `+cu128`); older `+cu126` wheels do not include **sm_120** kernels. Example for this repo’s venv:
 
 ```bash
 pip install --force-reinstall torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
 ```
 
 Then check: `python -c "import torch; print(torch.__version__, torch.cuda.is_available()); x=torch.randn(2,2,device='cuda'); print(x.device)"` — you should see `cuda:0` and no “not compatible with sm_120” warning.
+
+**Single-seed CUDA throughput.** The trainer already enables mixed precision (`bf16` when supported), `non_blocking` H2D copies, fused-friendly settings (cuDNN benchmark, TF32), and—for **one** ensemble member—`torch.compile`. To squeeze more from a fast GPU:
+
+- **`--compile-mode max-autotune`** — heavier graph optimization (slow warmup, often best steady-state step time). Default is `default`; `reduce-overhead` can help very small steps.
+- **`--batch-size N`** — auto batch size is conservative; if VRAM allows, raise `N` until you are near the limit (the trainer still halves on CUDA OOM).
+- **`--num-workers`** — raise if the CPU can feed the GPU faster (default already caps aggressively on Windows).
+- **Fused Adam** — used automatically on CUDA when supported; **`--no-fused-adam`** forces the plain kernel for debugging comparisons.
 
 ```bash
 python -m experiments.run_cnn_lstm --fetch-dataset
@@ -172,6 +183,75 @@ python -m experiments.run_cnn_lstm --fetch-dataset \
 ```
 
 This runs the full pipeline: preprocessing → BPE tokenisation → CNN-LSTM training → evaluation → baseline comparison. Results are saved to `results/metrics.json`. Defaults favour accuracy: 200-tweets data, larger model (256/384), **max sequence length 384**, **balanced class weights** in the loss, label smoothing, weight decay, and **ReduceLROnPlateau** (default) on validation macro-F1. Optional: ``--lr-schedule cosine_restarts`` (warm restarts) to experiment; it can be slower in early epochs and is not always better.
+
+Optional training flags for **persisting** models:
+
+- **`--run-label PREFIX`** — defaults to `run`. Every invocation creates a new directory `artifacts/runs/<PREFIX>_<UTC-timestamp>/` holding the trainer checkpoint (`model.pt`), a `tokeniser.json` copy aligned with that run, and `training.json`. The trainer **overwrites** only `model.pt` **inside that folder** when a better validation macro-F1 checkpoint is found; a new training process always uses a **new** timestamped folder.
+- ``--save-run [LABEL]`` — optional **alternate** run label (overrides `--run-label`). Default label when the flag has no argument: ``cnn``.
+- ``--checkpoint PATH`` — override where the trainer saves best weights; omit to use `model.pt` under the run directory (ensemble: `model_train<seed>.pt` in the same folder).
+- ``--promote-best-dir DIR`` — default ``artifacts/best_model_bundle/``: after training finishes, this directory is refreshed **only** when this run’s strongest validation macro‑F1 **strictly beats** the value in the existing `training.json` there (ties keep the old bundle). With multiple ensemble seeds, the best-by-val-F1 member wins.
+- ``--no-promote-best`` — skip updating the canonical directory; per-run snapshots are unchanged.
+
+### Evaluate a saved CNN-LSTM bundle (`load_cnn_checkpoint`)
+
+Use this **after** you have a bundle directory: any `artifacts/runs/<label>_<UTC>/` from training, or **`artifacts/best_model_bundle/`** when training has promoted a strictly better model (`training.json` carries `best_val_f1_macro` for comparison).
+
+**Inference only:** the loader **never trains** — it restores weights and runs forward passes.
+
+- **`--eval`** — same preprocessing as training, rebuilds the stratified train / validation / test split (**`split_seed`** from the bundle unless you pass **`--split-seed`**) and prints metrics for each slice (fair comparison with `run_cnn_lstm`).
+- **`--eval-full-dataset`** — **no split**; one pooled accuracy / macro‑F1 over **every row** in the resolved CSV after cleaning (handy for a “whole file” number; not the same as the held-out **test** split).
+
+**Choosing the dataset path:**
+
+1. Explicit path: **`--dataset path/to/file.csv`** (CSV or JSON, same conventions as elsewhere in this README).
+2. Built-in presets (repo-relative paths, same CSVs documented in **`src/dataset.py`**):
+
+   | `--preset-dataset` value | CSV used |
+   |--------------------------|----------|
+   | `chanchal_200` | ``data/AuthorIdentification/Dataset/.../200_tweets_per_user.csv`` — same default as training |
+   | `chanchal_50`  | ``data/AuthorIdentification/Dataset/.../50_tweets_per_user.csv`` |
+
+3. Bundled fallback: whatever was recorded in **`training.json`** under ``cli_args.dataset`` when the bundle was saved.
+4. If none of the above applies: **`DEFAULT_CHANCHAL_200_CSV`** (`200_tweets_per_user.csv`).
+
+Bundles use **`training.json`** `schema_version` **2**, with explicit **`seeds`** (stratified split + CNN member seed plus CLI echoes) and **`tuning`** (main hyperparameters from the driver). The full **`cli_args`** snapshot is still included.
+
+If you pass `--dataset` or `--preset-dataset`, `--eval` is turned on automatically (you still need `--eval` if you omit both and want metrics).
+
+**Choosing the bundle location:**
+
+- **`--promoted-best`** loads **`--promote-best-dir`** (default ``artifacts/best_model_bundle``, the same path as ``experiments.run_cnn_lstm``’s canonical promotion target unless you overrode `--promote-best-dir` during training — then pass matching `--promote-best-dir` here).
+- **`--artifact DIR`** accepts a **single-member** bundle (`model.pt`, `tokeniser.json`, `training.json` together), **or** a multi-seed **run root** that contains **`ensemble_index.json`**: every ``member_train*/model.pt`` is scored with **majority vote**, matching ``run_cnn_lstm``.
+
+**Examples (from repo root):**
+
+```bash
+# Promoted-best bundle — default repo dataset path (resolution order above).
+python -m experiments.load_cnn_checkpoint --promoted-best --eval --fetch-dataset
+
+# Custom canonical-dir location (must match training if not default).
+python -m experiments.load_cnn_checkpoint --promoted-best --promote-best-dir path/to/best_bundle --eval
+
+# Re-evaluate a full ensemble run folder (majority vote).
+python -m experiments.load_cnn_checkpoint --artifact artifacts/runs/cnn_20260101_120000 --eval --fetch-dataset
+
+# Faster Chanchal slice (50 tweets per author).
+python -m experiments.load_cnn_checkpoint --artifact artifacts/best_model_bundle \
+  --eval --preset-dataset chanchal_50 --fetch-dataset
+
+# Custom CSV anywhere on disk (must match trained author cardinality for meaningful scores).
+python -m experiments.load_cnn_checkpoint --promoted-best --eval \
+  --dataset path/to/other.csv --fetch-dataset
+
+# One metric over every row (no train/val/test buckets).
+python -m experiments.load_cnn_checkpoint --promoted-best --eval --eval-full-dataset --fetch-dataset
+
+# Optional JSON of split metrics only.
+python -m experiments.load_cnn_checkpoint --promoted-best --eval \
+  --metrics-out results/load_eval.json
+```
+
+**Useful flags:** `--metrics-out`, `--fetch-dataset`, `--batch-size`, `--num-workers`, `--no-amp`, `--show-meta`, `--promote-best-dir`, `--eval-full-dataset`. See **`python -m experiments.load_cnn_checkpoint --help`**.
 
 To **validate `CNNLSTMModel` only** on random token IDs (no dataset, no `SubwordTokeniser` — useful before Task 4 is integrated):
 
@@ -227,9 +307,10 @@ python -m experiments.run_cnn_lstm \
 ```
 
 **Outputs:**
-- `results/metrics.json` — CNN-LSTM and baseline metrics
-- `artifacts/tokeniser.json` — trained BPE tokeniser
-- `artifacts/checkpoints/best_model.pt` — best model checkpoint (by validation macro-F1)
+- `results/metrics.json` — CNN-LSTM and baseline metrics (includes `cnn_lstm_run_dir` for the timestamped run folder)
+- `artifacts/tokeniser.json` — tokeniser from the latest training invocation
+- `artifacts/runs/<label>_<UTC>/` — per-run `model.pt`, `tokeniser.json`, `training.json` (and `member_train*/` for ensembles)
+- `artifacts/best_model_bundle/` — optional canonical best bundle (`--promote-best-dir`, on by default unless `--no-promote-best`)
 
 ### Run baselines only
 
@@ -253,7 +334,7 @@ Trains SVM and Logistic Regression classifiers on BoW, TF-IDF, character n-gram,
 python -m pytest tests/ -v
 ```
 
-The test suite includes unit tests and property-based tests (via `hypothesis`) covering all components. 133 tests total.
+The test suite includes unit tests and property-based tests (via `hypothesis`) covering all components (`pytest tests/` counts them all).
 
 To run a specific test file:
 ```bash

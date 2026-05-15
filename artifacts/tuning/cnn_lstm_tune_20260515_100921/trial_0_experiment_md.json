@@ -1,0 +1,13 @@
+{
+  "optuna": {
+    "study_name": "cnn_lstm_tune",
+    "trial_number": 0,
+    "direction": "maximize",
+    "objective_metric": "cnn_lstm_splits.validation.f1_macro",
+    "study_output_dir": "C:\\code\\Group-38_Cos760\\artifacts\\tuning\\cnn_lstm_tune_20260515_100921"
+  },
+  "seeds_echo": {
+    "split_seed": 42,
+    "cnn_train_seed": 42
+  }
+}

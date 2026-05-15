@@ -946,8 +946,7 @@ End-to-end pipeline tests on a small synthetic dataset (50 samples, 5 authors):
 ### Experiment Reproducibility
 
 - All experiments seeded with `seed=42`
-- Tokeniser vocabulary saved to `artifacts/tokeniser.json`
-- Model checkpoints saved to `artifacts/checkpoints/`
+- Tokeniser vocabulary saved to `artifacts/tokeniser.json`; CNN-LSTM runs write `artifacts/runs/<label>_<UTC>/` bundles and may promote to `artifacts/best_model_bundle/` when validation macro-F1 strictly improves (see `experiments/run_cnn_lstm.py`, `README.md`)
 - Results logged to `results/metrics.json` for each experimental condition
 
 
@@ -1008,7 +1007,8 @@ neural-authorship-attribution/
 │   └── metrics.json        # Experiment results
 ├── artifacts/
 │   ├── tokeniser.json
-│   └── checkpoints/
+│   ├── runs/                    # Timestamped CNN-LSTM run bundles (model.pt + tokeniser + training.json)
+│   └── best_model_bundle/       # Optional canonical bundle (promotion-on-improve only)
 ├── requirements.txt
 └── README.md
 ```

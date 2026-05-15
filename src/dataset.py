@@ -1,8 +1,10 @@
 """DatasetLoader: load and split social media authorship datasets.
 
-Also provides :func:`ensure_authoridentification_dataset` to shallow-clone the
+Also provides `EVAL_DATASET_PRESETS`, :func:`resolve_evaluation_dataset_path`
+(shortcuts used when evaluating saved CNN bundles with ``--preset-dataset``), and
+:func:`ensure_authoridentification_dataset` to shallow-clone the
 Chanchal et al. ``AuthorIdentification`` GitHub release when CSVs are not yet
-local, and :func:`authoridentification_clone_path` / ``DEFAULT_CHANCHAL_CSV``
+local, plus :func:`authoridentification_clone_path` / ``DEFAULT_CHANCHAL_CSV``
 for default locations.
 """
 
@@ -44,6 +46,42 @@ DEFAULT_CHANCHAL_200_CSV = (
     "data/AuthorIdentification/Dataset/"
     "Dataset_with_varying_number_of_tweets/200_tweets_per_user.csv"
 )
+
+# Convenience keys for evaluating a saved model without typing long paths (--preset-dataset).
+EVAL_DATASET_PRESETS: dict[str, str] = {
+    "chanchal_50": DEFAULT_CHANCHAL_CSV,
+    "chanchal_200": DEFAULT_CHANCHAL_200_CSV,
+}
+
+
+def resolve_evaluation_dataset_path(
+    *,
+    explicit: str | None,
+    preset: str | None,
+    training_cli_dataset: object | None,
+) -> str:
+    """Pick a CSV/JSON path when loading a saved CNN-LSTM bundle for evaluation.
+
+    Precedence:
+
+    #. Non-empty ``explicit`` (CLI ``--dataset``).
+    #. ``preset`` in :data:`EVAL_DATASET_PRESETS` (CLI ``--preset-dataset``).
+    #. Non-empty ``training_cli_dataset`` from bundled ``training.json`` ``cli_args``.
+    #. :data:`DEFAULT_CHANCHAL_200_CSV`.
+
+    Returned paths may be repo-relative strings (same style as defaults).
+    """
+    if explicit is not None and str(explicit).strip():
+        return str(Path(explicit).expanduser())
+    if preset is not None:
+        if preset not in EVAL_DATASET_PRESETS:
+            raise ValueError(f"unknown preset: {preset!r}")
+        return EVAL_DATASET_PRESETS[preset]
+    if training_cli_dataset is not None:
+        s = str(training_cli_dataset).strip()
+        if s:
+            return str(Path(s).expanduser())
+    return DEFAULT_CHANCHAL_200_CSV
 
 
 def _project_root() -> Path:

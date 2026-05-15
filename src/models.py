@@ -74,9 +74,11 @@ class MetricsDict:
 
 @dataclass
 class TrainingHistory:
-    """Record of per-epoch losses and validation metrics from a training run."""
+    """Record of per-epoch losses, validation metrics, and LR from a training run."""
+
     train_losses: list[float] = field(default_factory=list)
     val_metrics: list[MetricsDict] = field(default_factory=list)
+    lr_per_epoch: list[float] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------

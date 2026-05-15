@@ -13,7 +13,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
 
-from src.evaluate import evaluate
+from src.evaluate import evaluate, evaluate_labels
 
 
 # ---------------------------------------------------------------------------
@@ -225,3 +225,16 @@ def test_per_class_f1_keys_include_predicted_only_class() -> None:
     metrics = evaluate(model, loader)
 
     assert set(metrics.f1_per_class.keys()) == expected_classes
+
+
+def test_evaluate_matches_evaluate_labels_numpy_path() -> None:
+    labels = [0, 0, 1, 1, 2, 2]
+    preds = list(labels)
+    m_arr = evaluate_labels(np.asarray(labels), np.asarray(preds))
+    model = _FixedPredictionModel(preds, num_classes=3)
+    loader = _make_loader(labels)
+    m_mod = evaluate(model, loader)
+
+    assert m_mod.accuracy == pytest.approx(m_arr.accuracy)
+    assert m_mod.f1_macro == pytest.approx(m_arr.f1_macro)
+    np.testing.assert_array_equal(m_mod.confusion_matrix, m_arr.confusion_matrix)
